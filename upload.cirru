@@ -4,7 +4,7 @@
   :uploads $ []
     {}
       :from |dist/*
-      :to |/web-assets/cdn/calcit-workflow/
+      :to |/web-assets/cdn/edn-tree-viewer/
     {}
       :from |dist/{index.html,manifest.json}
-      :to |/web-assets/repo/mvc-works/calcit-workflow/
+      :to |/web-assets/repo/Memkits/edn-tree-viewer/
