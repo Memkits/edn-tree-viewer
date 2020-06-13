@@ -1,12 +1,12 @@
 
-(ns app.page
+(ns edn-tree-viewer.page
   (:require [respo.render.html :refer [make-string]]
             [shell-page.core :refer [make-page spit slurp]]
-            [app.comp.container :refer [comp-container]]
-            [app.schema :as schema]
+            [edn-tree-viewer.comp.container :refer [comp-container]]
+            [edn-tree-viewer.schema :as schema]
             [reel.schema :as reel-schema]
             [cljs.reader :refer [read-string]]
-            [app.config :as config]
+            [edn-tree-viewer.config :as config]
             [cumulo-util.build :refer [get-ip!]])
   (:require-macros [clojure.core.strint :refer [<<]]))
 

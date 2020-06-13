@@ -1,14 +1,14 @@
 
-(ns app.main
+(ns edn-tree-viewer.main
   (:require [respo.core :refer [render! clear-cache! realize-ssr!]]
-            [app.comp.container :refer [comp-container]]
-            [app.updater :refer [updater]]
-            [app.schema :as schema]
+            [edn-tree-viewer.comp.container :refer [comp-container]]
+            [edn-tree-viewer.updater :refer [updater]]
+            [edn-tree-viewer.schema :as schema]
             [reel.util :refer [listen-devtools!]]
             [reel.core :refer [reel-updater refresh-reel]]
             [reel.schema :as reel-schema]
             [cljs.reader :refer [read-string]]
-            [app.config :as config]
+            [edn-tree-viewer.config :as config]
             [cumulo-util.core :refer [repeat!]]))
 
 (defonce *reel

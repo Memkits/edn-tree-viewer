@@ -1,6 +1,6 @@
 {:version "0.0.1"
- :group-id "mvc-works"
- :artifact-id "calcit-workflow"
+ :group-id "memkits"
+ :artifact-id "edn-tree-viewer"
  :skip-tag true
- :description "Workflow"
- :scm-url "https://github.com/mvc-works/calcit-workflow"}
+ :description "Tree browser for edn data"
+ :scm-url "https://github.com/Memkits/edn-tree-viewer"}
