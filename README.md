@@ -2,11 +2,21 @@
 EDN Tree Viewer
 ----
 
-> anoher way to browse tree data.
+> another way to browse tree data.
 
 ### Usage
 
-_TODO_
+[![Respo](https://img.shields.io/clojars/v/memkits/edn-tree-viewer.svg)](https://clojars.org/memkits/edn-tree-viewer)
+
+```clojure
+[memkits/edn-tree-viewer "0.0.1-a1"]
+```
+
+```clojure
+; edn-tree-viewer.core/comp-edn-tree-viewer
+
+(comp-edn-tree-viewer (>> states :viewer) data styles)
+```
 
 ### Workflow
 
