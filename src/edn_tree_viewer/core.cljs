@@ -97,7 +97,7 @@
  (data selected on-pick)
  (div
   {}
-  (comp-title (str "size of: " (pr-str (count data))))
+  (comp-title (str "Vector of size: " (pr-str (count data))))
   (list->
    {:style ui/column}
    (->> data
@@ -114,6 +114,15 @@
              (=< 4 nil)
              (comp-preview item))]))))))
 
+(defn get-by-keys [data xs]
+  (cond
+    (empty? xs) data
+    (nil? data) nil
+    (map? data) (recur (get data (first xs)) (rest xs))
+    (vector? data) (recur (nth data (first xs)) (rest xs))
+    (seq? data) (recur (nth data (first xs)) (rest xs))
+    :else nil))
+
 (defcomp
  comp-edn-tree-viewer
  (states data styles)
@@ -124,7 +133,7 @@
      {:innerHTML ".clickable-item:hover {\n  background-color: hsl(0,0%,95%);\n  cursor: pointer;\n}\n",
       :scoped true})
     (list->
-     {}
+     {:style {:font-size 13}}
      (->> state
           :path
           (map-indexed
@@ -137,7 +146,7 @@
                   (d! cursor (assoc state :path (vec (take (inc idx) (state :path))))))}
                (comp-literal k))]))))
     (list->
-     {:style (merge ui/row {:overflow :auto})}
+     {:style (merge ui/row {:overflow :auto, :font-size 13})}
      (concat
       (->> state
            :path
@@ -146,11 +155,11 @@
            range
            (map
             (fn [idx]
-              (let [d (get-in data (take idx (state :path)))]
+              (let [d (get-by-keys data (take idx (state :path)))]
                 [idx
                  (div
                   {:style {:padding "4px 8px",
-                           :border-left (str "1px solid " (hsl 20 70 80))}}
+                           :border-left (str "1px solid " (hsl 20 70 90))}}
                   (cond
                     (map? d)
                       (comp-map-keys

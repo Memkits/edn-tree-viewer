@@ -26,7 +26,7 @@
       :text "Edit data",
       :multiline? true,
       :initial (pr-str (:data state)),
-      :input-style {:font-family ui/font-code}}
+      :input-style {:font-family ui/font-code, :min-height 320}}
      (fn [result d!] (d! cursor {:data (read-string result)})))
     (=< nil 8)
     (comp-edn-tree-viewer (>> states :viewer) (state :data) {})

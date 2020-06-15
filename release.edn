@@ -1,4 +1,4 @@
-{:version "0.0.1"
+{:version "0.0.1-a1"
  :group-id "memkits"
  :artifact-id "edn-tree-viewer"
  :skip-tag true
