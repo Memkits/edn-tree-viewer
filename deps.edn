@@ -1,6 +1,9 @@
 
 {
   :paths ["src"]
+  :deps {
+    cirru/favored-edn {:mvn/version "0.1.3"}
+  }
   :aliases {
     :release {
       :extra-deps {
