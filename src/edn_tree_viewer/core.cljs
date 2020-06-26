@@ -4,9 +4,10 @@
             [respo-ui.core :as ui]
             [respo.core
              :refer
-             [defcomp defeffect <> >> list-> div button textarea span input style]]
+             [defcomp defeffect <> >> list-> div button textarea span input style pre code]]
             [respo.comp.space :refer [=<]]
-            [edn-tree-viewer.config :refer [dev?]]))
+            [edn-tree-viewer.config :refer [dev?]]
+            [favored-edn.core :refer [write-edn]]))
 
 (defcomp
  comp-literal
@@ -119,7 +120,7 @@
     (empty? xs) data
     (nil? data) nil
     (map? data) (recur (get data (first xs)) (rest xs))
-    (vector? data) (recur (nth data (first xs)) (rest xs))
+    (vector? data) (if (number? (first xs)) (recur (nth data (first xs)) (rest xs)) nil)
     (seq? data) (recur (nth data (first xs)) (rest xs))
     :else nil))
 
@@ -133,7 +134,7 @@
      {:innerHTML ".clickable-item:hover {\n  background-color: hsl(0,0%,95%);\n  cursor: pointer;\n}\n",
       :scoped true})
     (list->
-     {:style {:font-size 13}}
+     {:style (merge ui/row {:font-size 13})}
      (->> state
           :path
           (map-indexed
@@ -146,7 +147,10 @@
                   (d! cursor (assoc state :path (vec (take (inc idx) (state :path))))))}
                (comp-literal k))]))))
     (list->
-     {:style (merge ui/row {:overflow :auto, :font-size 13})}
+     {:style (merge
+              ui/expand
+              ui/row
+              {:overflow :auto, :font-size 13, :border-top (str "1px solid " (hsl 0 0 90))})}
      (concat
       (->> state
            :path
@@ -195,4 +199,17 @@
                            :path
                            (-> (take idx (state :path)) vec (conj result))))))
                     :else (div {} (comp-title "Literal") (comp-literal d))))]))))
-      [[(count (state :path)) (=< 400 nil)]])))))
+      [[-2
+        (div
+         {:style (merge
+                  ui/expand
+                  {:border-left (str "1px solid " (hsl 0 0 90)),
+                   :padding "6px 0px",
+                   :min-width "max-content",
+                   :flex-shrink 0,
+                   :white-space :pre,
+                   :font-family ui/font-code,
+                   :line-height "20px",
+                   :padding-bottom 200})}
+         (code {:inner-text (write-edn (get-in data (:path state)))}))]
+       [-1 (div {:style {:width 200}})]])))))

@@ -29,5 +29,8 @@
       :input-style {:font-family ui/font-code, :min-height 320}}
      (fn [result d!] (d! cursor {:data (read-string result)})))
     (=< nil 8)
-    (comp-edn-tree-viewer (>> states :viewer) (state :data) {})
+    (comp-edn-tree-viewer
+     (>> states :viewer)
+     (state :data)
+     {:border (str "1px solid " (hsl 0 0 90)), :width 800, :height 400})
     (when dev? (comp-reel (>> states :reel) reel {})))))
