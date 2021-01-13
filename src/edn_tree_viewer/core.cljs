@@ -48,7 +48,7 @@
 (defcomp
  comp-title
  (x)
- (div {:style {:font-family ui/font-fancy, :color (hsl 0 0 70)}} (<> x)))
+ (div {:style {:font-family ui/font-fancy, :color (hsl 0 0 70), :padding "0px 4px"}} (<> x)))
 
 (defcomp
  comp-map-keys
@@ -64,12 +64,12 @@
            [k
             (div
              {:style (merge
-                      {:cursor :pointer, :padding "2px 8px"}
+                      {:cursor :pointer, :padding "2px 8px", :font-size 11}
                       (if (= k selected) {:background-color (hsl 0 0 95)})),
               :class-name "clickable-item",
               :on-click (fn [e d!] (on-pick k d!))}
              (comp-literal k)
-             (=< 4 nil)
+             (=< 8 nil)
              (comp-preview v))]))))))
 
 (defcomp
@@ -129,7 +129,7 @@
  (states data styles)
  (let [cursor (:cursor states), state (or (:data states) {:path []})]
    (div
-    {:style (merge ui/column styles)}
+    {:style (merge ui/column {:max-height "80vh"} styles)}
     (style
      {:innerHTML ".clickable-item:hover {\n  background-color: hsl(0,0%,95%);\n  cursor: pointer;\n}\n",
       :scoped true})
@@ -141,7 +141,7 @@
            (fn [idx k]
              [idx
               (span
-               {:style {:padding "2px 8px"},
+               {:style {:display :inline-block, :padding "0 4px"},
                 :class-name "clickable-item",
                 :on-click (fn [e d!]
                   (d! cursor (assoc state :path (vec (take (inc idx) (state :path))))))}
@@ -162,8 +162,10 @@
               (let [d (get-by-keys data (take idx (state :path)))]
                 [idx
                  (div
-                  {:style {:padding "4px 8px",
-                           :border-left (str "1px solid " (hsl 20 70 90))}}
+                  {:style {:padding "4px 0px",
+                           :border-left (str "1px solid " (hsl 20 70 90)),
+                           :overflow :auto,
+                           :flex-shrink 0}}
                   (cond
                     (map? d)
                       (comp-map-keys
@@ -198,18 +200,25 @@
                            state
                            :path
                            (-> (take idx (state :path)) vec (conj result))))))
-                    :else (div {} (comp-title "Literal") (comp-literal d))))]))))
+                    :else
+                      (div
+                       {}
+                       (comp-title "Literal")
+                       (div {:style {:padding "0 6px"}} (comp-literal d)))))]))))
       [[-2
         (div
          {:style (merge
                   ui/expand
                   {:border-left (str "1px solid " (hsl 0 0 90)),
-                   :padding "6px 0px",
+                   :padding "4px 4px",
                    :min-width "max-content",
                    :flex-shrink 0,
                    :white-space :pre,
                    :font-family ui/font-code,
                    :line-height "20px",
-                   :padding-bottom 200})}
-         (code {:inner-text (write-edn (get-in data (:path state)))}))]
+                   :padding-bottom 200,
+                   :padding-right 80})}
+         (code
+          {:style {:line-height "16px"},
+           :inner-text (write-edn (get-in data (:path state)) {:indent 2})}))]
        [-1 (div {:style {:width 200}})]])))))
