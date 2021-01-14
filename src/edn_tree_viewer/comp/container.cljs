@@ -19,10 +19,12 @@
        cursor (or (:cursor states) [])
        state (or (:data states) {:data nil})]
    (div
-    {:style (merge ui/global ui/column {:padding 16})}
+    {:style (merge ui/global ui/column {:padding 0})}
     (comp-prompt
      (>> states :edit)
-     {:trigger (button {:style ui/button, :inner-text "Edit Data"}),
+     {:trigger (button
+                {:style (merge ui/button {:background-color (hsl 200 80 70), :color :white}),
+                 :inner-text "Set Data"}),
       :text "Edit data",
       :multiline? true,
       :initial (pr-str (:data state)),
@@ -32,5 +34,5 @@
     (comp-edn-tree-viewer
      (>> states :viewer)
      (state :data)
-     {:border (str "1px solid " (hsl 0 0 90)), :width 800, :height 400})
+     {:border (str "1px solid " (hsl 0 0 90)), :width nil})
     (when dev? (comp-reel (>> states :reel) reel {})))))
