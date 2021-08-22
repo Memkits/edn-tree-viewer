@@ -1,6 +1,0 @@
-{:version "0.0.1-a2"
- :group-id "memkits"
- :artifact-id "edn-tree-viewer"
- :skip-tag true
- :description "Tree browser for edn data"
- :scm-url "https://github.com/Memkits/edn-tree-viewer"}
