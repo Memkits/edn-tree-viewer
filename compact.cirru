@@ -17,12 +17,12 @@
                     {} $ :data nil
                   edit-plugin $ use-prompt (>> states :edit)
                     {} (:text "\"Edit data") (:multiline? true)
-                      :initial $ to-lispy-string (:data state)
+                      :initial $ format-cirru-edn (:data state)
                       :input-style $ {} (:font-family ui/font-code) (:min-height "\"50vh") (:font-size 12) (:white-space :pre)
                       :card-style $ {} (:max-width "\"66vw")
                 div
                   {}
-                    :class-name $ str-spaced css/global css/column
+                    :class-name $ str-spaced css/global css/column css/fullscreen
                     :style $ {} (:padding 0)
                   div
                     {} $ :style
@@ -79,10 +79,9 @@
                   state $ or (:data states)
                     {} $ :path ([])
                 div
-                  {} (:class-name css/column)
-                    :style $ merge
-                      {} $ :max-height "\"80vh"
-                      , styles
+                  {}
+                    :class-name $ str-spaced css/expand css/column
+                    :style styles
                   list->
                     {} (:class-name css/row)
                       :style $ {} (:font-size 13)
@@ -194,7 +193,8 @@
                 {} $ :class-name css/column
                 comp-title "\"Map"
                 list->
-                  {} $ :style ui/column
+                  {} (:class-name css/column)
+                    :style $ {} (:padding-bottom 200)
                   -> data (.to-list)
                     .map-pair $ fn (k v)
                       [] k $ div
@@ -214,14 +214,14 @@
                 cond
                     literal? x
                     comp-literal x
-                  (map? x) (<> "\"Map")
+                  (map? x) (<> "\"Map" style-folded)
                   (list? x)
                     if
                       and (every? x literal?)
                         <= (count x) 5
                       <> $ format-cirru-edn x
-                      <> "\"List"
-                  (set? x) (<> "\"Set")
+                      <> "\"List" style-folded
+                  (set? x) (<> "\"Set" style-folded)
                   true $ <> (to-lispy-string x)
         |comp-seq-keys $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -229,7 +229,8 @@
               div ({})
                 comp-title $ str "\"Seq of: " (count data)
                 list->
-                  {} $ :class-name css/column
+                  {} (:class-name css/column)
+                    :style $ {} (:padding-bottom 200)
                   ->> data $ map-indexed
                     fn (idx item)
                       [] idx $ div
@@ -255,7 +256,8 @@
                 comp-title $ str "\"Vector of size: "
                   to-lispy-string $ count data
                 list->
-                  {} $ :style ui/column
+                  {} (:class-name css/column)
+                    :style $ {} (:padding-bottom 200)
                   -> data $ map-indexed
                     fn (idx item)
                       [] idx $ div
@@ -301,12 +303,13 @@
             defn peek-in (data path)
               if (empty? path) data $ cond
                   list? data
-                  if
-                    .contains? data $ first path
-                    recur
-                      nth data $ first path
-                      rest path
-                    , nil
+                  let
+                      p0 $ first path
+                    if (number? p0)
+                      if (.contains? data p0)
+                        recur (nth data p0) (rest path)
+                        , nil
+                      , nil
                 (map? data)
                   recur
                     &map:get data $ first path
@@ -347,6 +350,12 @@
                 :border-left $ str "\"1px solid " (hsl 20 70 90)
                 :overflow :auto
                 :flex-shrink 0
+        |style-folded $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-folded $ {}
+              "\"&" $ {} (:padding "\"0 8px") (:border-radius "\"8px")
+                :border $ str "\"1px solid " (hsl 220 90 88)
+                :background-color $ hsl 220 80 98
         |style-pair $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-pair $ {}
