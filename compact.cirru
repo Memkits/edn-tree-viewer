@@ -13,27 +13,25 @@
                   store $ :store reel
                   states $ :states store
                   cursor $ or (:cursor states) ([])
-                  state $ or (:data states)
-                    {} $ :data nil
                   edit-plugin $ use-prompt (>> states :edit)
                     {} (:text "\"Edit data") (:multiline? true)
-                      :initial $ format-cirru-edn (:data state)
+                      :initial $ format-cirru-edn (:data store)
                       :input-style $ {} (:font-family ui/font-code) (:min-height "\"50vh") (:font-size 12) (:white-space :pre)
                       :card-style $ {} (:max-width "\"66vw")
                 div
                   {}
-                    :class-name $ str-spaced css/global css/column css/fullscreen
+                    :class-name $ str-spaced css/preset css/global css/column css/fullscreen
                     :style $ {} (:padding 0)
                   div
                     {} $ :style
                       {} $ :padding "\"8px"
                     button $ {} (:class-name css/button-primary) (:inner-text "\"Set Data")
-                      :on-click $ fn (e d!) (println "\"clicked")
+                      :on-click $ fn (e d!)
                         .show edit-plugin d! $ fn (result)
-                          d! cursor $ {}
-                            :data $ parse-cirru-edn result
+                          d! :update-data $ parse-cirru-edn result
                   =< nil 0
-                  comp-edn-tree-viewer (>> states :viewer) (:data state)
+                  comp-edn-tree-viewer (:data store)
+                    either (:path store) ([])
                     {}
                       :border $ str "\"1px solid " (hsl 0 0 90)
                       :width nil
@@ -73,78 +71,63 @@
       :defs $ {}
         |comp-edn-tree-viewer $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-edn-tree-viewer (states data styles)
-              let
-                  cursor $ :cursor states
-                  state $ or (:data states)
-                    {} $ :path ([])
-                div
-                  {}
-                    :class-name $ str-spaced css/expand css/column
-                    :style styles
-                  list->
-                    {} (:class-name css/row)
-                      :style $ {} (:font-size 13)
-                    -> state :path $ map-indexed
-                      fn (idx k)
-                        [] idx $ span
-                          {}
-                            :class-name $ str-spaced style-clickable-item style-path-seg
-                            :on-click $ fn (e d!)
-                              d! cursor $ assoc state :path
-                                take (:path state) (inc idx)
-                          comp-literal k
-                  list->
-                    {} $ :class-name (str-spaced css/expand css/row style-content)
-                    concat
-                      -> state :path count inc range $ map
-                        fn (idx)
-                          let
-                              d $ get-by-keys data
-                                take (:path state) idx
-                            [] idx $ div
-                              {} $ :class-name style-entry
-                              cond
-                                  map? d
-                                  comp-map-keys d
-                                    peek-in state $ [] :path idx
-                                    fn (result d!)
-                                      d! cursor $ assoc state :path
-                                        ->
-                                          take (:path state) idx
-                                          conj result
-                                (list? d)
-                                  comp-vector-keys d
-                                    peek-in state $ [] :path idx
-                                    fn (result d!)
-                                      d! cursor $ assoc state :path
-                                        ->
-                                          take (:path state) idx
-                                          conj result
-                                ; (seq? d)
-                                  comp-seq-keys d
-                                    peek-in state $ [] :path idx
-                                    fn (result d!)
-                                      d! cursor $ assoc state :path
-                                        ->
-                                          take (:path state) idx
-                                          conj result
-                                true $ div ({}) (comp-title "\"Literal")
-                                  div
-                                    {} $ :style
-                                      {} $ :padding "\"0 6px"
-                                    comp-literal d
-                      []
-                        [] -2 $ div
-                          {} $ :class-name (str-spaced css/expand style-end-value)
-                          code $ {} (:class-name css/font-code)
-                            :style $ {} (:line-height "\"16px") (:font-size 12)
-                            :inner-text $ let
-                                v $ peek-in data (:path state)
-                              if (literal? v) (to-lispy-string v) (format-cirru-edn v)
-                        [] -1 $ div
-                          {} $ :style
-                            {} $ :width 200
+            defcomp comp-edn-tree-viewer (data path styles)
+              div
+                {}
+                  :class-name $ str-spaced css/expand css/column
+                  :style styles
+                list->
+                  {} (:class-name css/row)
+                    :style $ {} (:font-size 13)
+                  -> path $ map-indexed
+                    fn (idx k)
+                      [] idx $ span
+                        {}
+                          :class-name $ str-spaced style-clickable-item style-path-seg
+                          :on-click $ fn (e d!)
+                            d! :path $ take path (inc idx)
+                        comp-literal k
+                list->
+                  {} $ :class-name (str-spaced css/expand css/row style-content)
+                  concat
+                    -> path count inc range $ map
+                      fn (idx)
+                        let
+                            d $ get-by-keys data (take path idx)
+                          [] idx $ div
+                            {} $ :class-name style-entry
+                            cond
+                                map? d
+                                comp-map-keys d
+                                  peek-in path $ [] idx
+                                  fn (result d!)
+                                    d! :path $ -> (take path idx) (conj result)
+                              (list? d)
+                                comp-vector-keys d
+                                  peek-in path $ [] idx
+                                  fn (result d!)
+                                    d! :path $ -> (take path idx) (conj result)
+                              ; (seq? d)
+                                comp-seq-keys d
+                                  peek-in path $ [] idx
+                                  fn (result d!)
+                                    d! :path $ -> (take path idx) (conj result)
+                              true $ div ({}) (comp-title "\"Literal")
+                                div
+                                  {} $ :style
+                                    {} $ :padding "\"0 6px"
+                                  comp-literal d
+                    []
+                      [] -2 $ div
+                        {} $ :class-name (str-spaced css/expand style-end-value)
+                        code $ {} (:class-name css/font-code)
+                          :style $ {} (:line-height "\"16px") (:font-size 12)
+                          :inner-text $ let
+                              v $ peek-in data path
+                            if (literal? v) (to-lispy-string v) (format-cirru-edn v)
+                      [] -1 $ div
+                        {} $ :style
+                          {} $ :width 200
         |comp-literal $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-literal (x)
@@ -412,6 +395,15 @@
                   raw $ js/localStorage.getItem (:storage-key config/site)
                 when (some? raw)
                   dispatch! $ :: :hydrate-storage (parse-cirru-edn raw)
+              js/window.addEventListener "\"message" $ fn (event)
+                let
+                    d $ parse-cirru-edn (.-data event)
+                  if (tuple? d)
+                    tag-match d
+                        :tab-echo data
+                        dispatch! $ :: :update-data data
+                      _ $ js/console.error "\"Unknown message" d
+                    js/console.warn "\"Not handled" d
               println "|App started."
         |mount-target $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -457,6 +449,8 @@
             def store $ {}
               :states $ {}
                 :cursor $ []
+              :data nil
+              :path $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns edn-tree-viewer.schema)
     |edn-tree-viewer.updater $ %{} :FileEntry
@@ -468,6 +462,10 @@
                   :states cursor s
                   update-states store cursor s
                 (:hydrate-storage d) d
+                (:update-data data)
+                  -> store (assoc :data data)
+                    assoc :path $ []
+                (:path p) (assoc store :path p)
                 _ $ do (eprintln "\"Unknown op:" op) store
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
