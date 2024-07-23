@@ -124,7 +124,7 @@
                           :style $ {} (:line-height "\"16px") (:font-size 12)
                           :inner-text $ let
                               v $ peek-in data path
-                            if (literal? v) (to-lispy-string v) (format-cirru-edn v)
+                            if (literal? v) (str v) (format-cirru-edn v)
                       [] -1 $ div
                         {} $ :style
                           {} $ :width 200
@@ -133,11 +133,11 @@
             defcomp comp-literal (x)
               cond
                   string? x
-                  span $ {}
-                    :inner-text $ to-lispy-string x
-                    :class-name css/font-code
-                    :style $ {}
-                      :color $ hsl 170 80 60
+                  div
+                    {} (:class-name css/font-code)
+                      :style $ {} (:display :inline-block)
+                        :color $ hsl 170 80 60
+                    comp-string-preview x
                 (bool? x)
                   span $ {}
                     :inner-text $ str x
@@ -195,14 +195,15 @@
               span
                 {} $ :class-name (str-spaced css/font-code style-preview)
                 cond
-                    literal? x
-                    comp-literal x
+                    string? x
+                    comp-string-preview x
+                  (literal? x) (comp-literal x)
                   (map? x) (<> "\"Map" style-folded)
                   (list? x)
                     if
                       and (every? x literal?)
                         <= (count x) 5
-                      <> $ format-cirru-edn x
+                      <> $ trim (format-cirru-edn x)
                       <> "\"List" style-folded
                   (set? x) (<> "\"Set" style-folded)
                   true $ <> (to-lispy-string x)
@@ -226,6 +227,13 @@
                         comp-literal idx
                         =< 4 nil
                         comp-preview item
+        |comp-string-preview $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defcomp comp-string-preview (t)
+              div
+                {} $ :style
+                  {} (:display :inline-block) (:max-width "\"50vw") (:vertical-align :top)
+                <> t
         |comp-title $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-title (x)
@@ -313,6 +321,7 @@
             defstyle style-content $ {}
               "\"&" $ {} (:overflow :auto) (:font-size 13)
                 :border-top $ str "\"1px solid " (hsl 0 0 90)
+                :padding-right "\"50vw"
         |style-end-value $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-end-value $ {}
@@ -320,7 +329,7 @@
                 :border-left $ str "\"1px solid " (hsl 0 0 90)
                 :padding "\"4px 4px"
                 :min-width "\"max-content"
-                :flex-shrink 0
+                :flex-shrink "\"0"
                 :white-space :pre
                 :font-family ui/font-code
                 :line-height "\"20px"
@@ -332,7 +341,7 @@
               "\"&" $ {} (:padding "\"4px 0px")
                 :border-left $ str "\"1px solid " (hsl 20 70 90)
                 :overflow :auto
-                :flex-shrink 0
+                :flex-shrink "\"0"
         |style-folded $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-folded $ {}
