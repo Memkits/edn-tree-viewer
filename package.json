@@ -1,9 +1,14 @@
 {
   "name": "calcit-workflow",
   "version": "0.1.0",
-  "description": "ClojureScript workflow using Calcit Editor",
+  "description": "Calcit browser EDN tree viewer",
   "main": "index.js",
-  "scripts": {},
+  "packageManager": "yarn@4.18.0",
+  "scripts": {
+    "compile": "calcit calcit.cirru",
+    "build": "yarn compile && vite build",
+    "dev": "yarn compile && vite"
+  },
   "repository": {
     "type": "git",
     "url": "git@github.com:mvc-works/calcit-workflow.git"
@@ -11,11 +16,9 @@
   "author": "jiyinyiyong",
   "license": "MIT",
   "devDependencies": {
-    "bottom-tip": "^0.1.5",
-    "vite": "^5.3.4"
+    "vite": "8.3.1"
   },
   "dependencies": {
-    "@calcit/procs": "^0.9.0-a1",
-    "feather-icons": "^4.29.2"
+    "@calcit/procs": "0.27.0"
   }
 }
