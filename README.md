@@ -17,16 +17,18 @@ comp-edn-tree-viewer data path styles
 
 Workflow https://github.com/calcit-lang/respo-calcit-workflow
 
-使用正式版 Calcit / `@calcit/procs` 0.27.0、Vite 8.3.1、Yarn 4.18.0。
-模块使用固定版本标签；Alerts 0.10.47 使用正式版，Respo
-相关模块保留兼容当前 Calcit 的 alpha，不使用 hash 或浮动 main。
+使用已发布的配对 Calcit / `@calcit/procs` **0.30.1-alpha.4**（预发布，
+不是正式 0.30.1）、Node.js 24、Vite 8.3.1、Yarn 4.18.0 和 Caps 0.1.1。
+模块使用正式 Respo 0.16.122、UI 0.7.41、Reel 0.6.39、Alerts 0.10.55、
+js-ffi 0.2.3；不使用 hash 或浮动 main。
 移除未使用的 Lilac、Memof、Markdown、旧 ClojureScript 导入及 HUD 依赖。
 
 ```bash
 caps --strict --ci
 yarn install --immutable
 caps verify --toolchain
-calcit calcit.cirru --check-only
+calcit calcit.cirru --check-only --all-defs
+calcit calcit.cirru fix --workflow strict --verify
 calcit calcit.cirru test --require-match
 yarn dev
 ```
@@ -38,11 +40,17 @@ yarn dev
 源码和依赖以 `calcit.cirru` / `deps.cirru` 为准。历史 compact 快照通过官方
 CLI 恢复；旧 `:version nil` 格式曾需已发布 0.28.0-alpha.3 的格式迁移修复
 （[Calcit #1550](https://github.com/calcit-lang/calcit/issues/1550)），这里只作
-一次性恢复，正常检查、编译和 CI 都使用正式版 0.27.0。
+一次性恢复，当前正常检查、编译和 CI 都使用上述配对工具链。
 
 树数据仍允许任意 EDN；导航路径是混合 Map 键/列表索引，操作和 store 已有
 具名类型。localStorage 保留原 `edn-tree-viewer` 键、Map 数据形状与启动恢复，
 继续支持 `:tab-echo` 消息更新；两个内嵌测试覆盖路径读取、更新和旧存储往返。
+
+旧 Map 存档在实际消费边界解码，已构造 Store 做名义匹配，不重复重建树数据。
+字符串位置使用公开 Option 索引接口，预览仍返回原字符；事件回调明确声明 Respo
+实际提供的 Map 和 dispatch 合同，prompt 文本在解析前检查，不使用 Fn 强转。
+唯一保留的 unsafe 是原生 MessageEvent 宿主身份边界，消息 data 仍经 String 检查。
+开放 EDN 数据继续使用 Dynamic，不放宽质量预算或宣称类型债务清零。
 
 COS 仅上传前端 `dist`，使用正式 action v1.2.0 内置 HTML 引用和公开资源
 verify，不复制额外校验脚本。PR 前缀包含 PR 编号、run id 与 attempt；

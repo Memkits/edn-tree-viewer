@@ -13,7 +13,7 @@
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (reel)
             let
-                store $ assert-type (&map:get reel :store) 'edn-tree-viewer.schema/Store
+                store $ schema/read-store $ option:unwrap (get reel :store)
                 states $ :states store
                 edit-plugin $ use-prompt (>> states :edit)
                   {} (:text "|Edit data") (:multiline? true)
@@ -29,7 +29,7 @@
                   button $ {} (:class-name css/button-primary) (:inner-text "|Set Data")
                     :on-click $ fn (event dispatch!)
                       edit-plugin .show dispatch! $ fn (result)
-                        dispatch! $ schema/Op :update-data $ parse-cirru-edn result
+                        dispatch! $ schema/Op :update-data $ parse-cirru-edn (decode-map-as result 'String)
                   =< nil 0
                 comp-edn-tree-viewer (:data store) (:path store)
                   {}
@@ -181,7 +181,15 @@
                         :style $ if (= k selected)
                           {} $ :background-color $ hsl 0 0 95
                         :class-name $ str-spaced style-clickable-item style-pair
-                        :on-click $ fn (e d!) (on-pick k d!)
+                        :on-click $ fn (e d!)
+                          hint-fn $ {}
+                            :args $ [] (:: 'Map 'Tag 'Dynamic)
+                              :: 'Fn $ {}
+                                :args $ [] 'Dynamic
+                                :rest 'Dynamic
+                                :return 'Unit
+                            :return 'Unit
+                          on-pick k d!
                       comp-literal k
                       =< 8 nil
                       comp-preview v
@@ -222,7 +230,15 @@
                 -> data $ map-indexed $ fn (idx item)
                   [] idx $ div
                     {}
-                      :on-click $ fn (e d!) (on-pick idx d!)
+                      :on-click $ fn (e d!)
+                        hint-fn $ {}
+                          :args $ [] (:: 'Map 'Tag 'Dynamic)
+                            :: 'Fn $ {}
+                              :args $ [] 'Dynamic
+                              :rest 'Dynamic
+                              :return 'Unit
+                          :return 'Unit
+                        on-pick idx d!
                       :style $ if (= idx selected)
                         merge
                           {} (:cursor :pointer) (:padding "|2px 8px")
@@ -270,7 +286,15 @@
                           {} $ :background-color $ hsl 0 0 95
                         {} (:cursor :pointer) (:padding "|2px 8px")
                       :class-name style-clickable-item
-                      :on-click $ fn (e d!) (on-pick idx d!)
+                      :on-click $ fn (e d!)
+                        hint-fn $ {}
+                          :args $ [] (:: 'Map 'Tag 'Dynamic)
+                            :: 'Fn $ {}
+                              :args $ [] 'Dynamic
+                              :rest 'Dynamic
+                              :return 'Unit
+                          :return 'Unit
+                        on-pick idx d!
                     comp-literal idx
                     =< 4 nil
                     comp-preview item
@@ -323,7 +347,9 @@
                       , nil
                   (string? data)
                     if (number? key)
-                      if (.contains? data key) (&str:nth data key) nil
+                      if (.contains-index? data key)
+                        option:unwrap $ nth data key
+                        , nil
                       , nil
                   true nil
               recur next $ rest path
@@ -401,7 +427,7 @@
     'edn-tree-viewer.main $ %{} 'FileEntry
       :defs $ {}
         '*reel $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *reel
+          :code $ quote $ defref *reel
             -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
           :examples $ []
           :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
@@ -413,19 +439,26 @@
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ println |Dispatch: op
-            reset! *reel $ reel-updater updater @*reel op
+            reset! *reel $ reel-updater edn-tree-viewer.updater/update-wire-store @*reel op
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Enum
+        'dispatch-wire! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn dispatch-wire! (op)
+            if (enum? op) (dispatch! op) (raise |Expected-Enum-operation)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Dynamic
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
             render-app!
-            add-watch *reel :changes $ fn (reel previous) (render-app!)
-            listen-devtools! |a dispatch!
+            add-watch! *reel :changes $ fn (reel previous) (render-app!)
+            listen-devtools! |a dispatch-wire!
             browser/add-event-listener! |beforeunload $ fn (event) (persist-storage!)
             match
-              browser/storage-get $ &map:get config/site :storage-key
+              browser/storage-get $ option:unwrap $ get config/site :storage-key
               (:some raw)
                 dispatch! $ schema/Op :hydrate-storage $ schema/read-store (parse-cirru-edn raw)
               (:none) &unit
@@ -441,20 +474,22 @@
                     _ $ host/console-error! "|Unknown message"
                   host/console-warn! |Not-handled
             println "|App started."
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
             :features $ #{} :js-ffi
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def mount-target
-            option:unwrap $ browser/query-selector |.app
+            option:unwrap $ respo.ffi.browser/query-selector |.app
           :examples $ []
-          :schema $ :: 'js-ffi.browser/DomElementHost
+          :schema $ :: 'respo.dom/DomElement
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             let
-                store $ assert-type (&map:get @*reel :store) 'edn-tree-viewer.schema/Store
-              browser/storage-set! (&map:get config/site :storage-key)
+                store $ schema/read-store $ option:unwrap (get @*reel :store)
+              browser/storage-set!
+                option:unwrap $ get config/site :storage-key
                 format-cirru-edn $ {}
                   :states $ :states store
                   :data $ :data store
@@ -464,17 +499,18 @@
             :args $ []
             :features $ #{} :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn reload! () (remove-watch *reel :changes) (clear-cache!)
-            add-watch *reel :changes $ fn (reel previous) (render-app!)
-            reset! *reel $ assert-type (refresh-reel @*reel schema/store updater) (:: 'Map 'Tag 'Dynamic)
+          :code $ quote $ defn reload! () (remove-watch! *reel :changes) (clear-cache!)
+            add-watch! *reel :changes $ fn (reel previous) (render-app!)
+            reset! *reel $ decode-map-as (refresh-reel @*reel schema/store edn-tree-viewer.updater/update-wire-store) (:: 'Map 'Tag 'Dynamic)
             println |Reloaded
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
             :features $ #{} :js-ffi
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
-            render! mount-target (comp-container @*reel) dispatch!
+            render! mount-target (comp-container @*reel) dispatch-wire!
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -518,12 +554,20 @@
           :schema $ :: 'StructDef
         'read-store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-store (data)
-            if (struct? data) (assert-type data 'edn-tree-viewer.schema/Store)
+            if (struct? data)
+              struct-match data (Store current current)
+                _ other $ raise |Expected-Store
               let
-                  legacy $ assert-type data $ :: 'Map 'Tag 'Dynamic
-                  states $ assert-type (&map:get legacy :states) (:: 'Map 'Dynamic 'Dynamic)
-                  path $ assert-type (&map:get legacy :path) (:: 'List 'Dynamic)
-                Store :states states :data (&map:get legacy :data) :path path
+                  legacy $ decode-map-as data $ :: 'Map 'Tag 'Dynamic
+                  states $ decode-map-as
+                    option:unwrap $ get legacy :states
+                    :: 'Map 'Dynamic 'Dynamic
+                  path $ decode-map-as
+                    option:unwrap $ get legacy :path
+                    :: 'List 'Dynamic
+                Store :states states :data
+                  option:unwrap-or (get legacy :data) nil
+                  , :path path
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'edn-tree-viewer.schema/Store)
             :args $ [] 'Dynamic
@@ -537,17 +581,28 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.schema
     'edn-tree-viewer.updater $ %{} 'FileEntry
-      :defs $ {} $ 'updater
-        %{} 'CodeEntry (:doc |)
+      :defs $ {}
+        'update-wire-store $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn update-wire-store (store op op-id op-time)
+            if (enum? op)
+              updater (schema/read-store store) op (decode-map-as op-id 'String) (decode-map-as op-time 'Number)
+              raise |Expected-Enum-operation
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'edn-tree-viewer.schema/Store)
+            :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
+        'updater $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn updater (store op op-id op-time)
             match op
               (:states cursor data)
-                assert-type (update-states store cursor data) 'edn-tree-viewer.schema/Store
-              (:hydrate-storage data) data
+                schema/read-store $ update-states store
+                  decode-map-as cursor $ :: 'List 'Dynamic
+                  , data
+              (:hydrate-storage data) (schema/read-store data)
               (:update-data data)
                 -> store (assoc :data data)
                   assoc :path $ []
-              (:path path) (assoc store :path path)
+              (:path path)
+                assoc store :path $ decode-map-as path $ :: 'List 'Dynamic
               _ $ do (println |Unknown-op: op) store
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'edn-tree-viewer.schema/Store)
@@ -571,5 +626,5 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.updater
           :require
-            [] respo.cursor :refer $ [] update-states
+            respo.cursor :refer $ update-states
             edn-tree-viewer.schema :as schema
