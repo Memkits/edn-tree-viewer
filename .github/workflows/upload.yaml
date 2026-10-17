@@ -32,6 +32,7 @@ jobs:
         with:
           tools: calcit,caps
           caps-version: "0.1.1"
+          deps-file: deps.cirru
       - name: Resolve and check frontend
         run: |
           caps --strict --ci
@@ -39,8 +40,8 @@ jobs:
           caps verify --toolchain
           calcit calcit.cirru edit format
           git diff --exit-code -- calcit.cirru
-          calcit calcit.cirru --check-only
-          calcit calcit.cirru analyze check-public --ns edn-tree-viewer.core --ns edn-tree-viewer.comp.container --ns edn-tree-viewer.config --ns edn-tree-viewer.main --ns edn-tree-viewer.schema --ns edn-tree-viewer.updater --summary-only --format json
+          calcit calcit.cirru --check-only --all-defs
+          calcit calcit.cirru fix --workflow strict --verify
           calcit calcit.cirru test --require-match
       - name: Select frontend CDN path
         id: asset-path
