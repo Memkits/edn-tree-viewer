@@ -17,11 +17,14 @@ comp-edn-tree-viewer data path styles
 
 Workflow https://github.com/calcit-lang/respo-calcit-workflow
 
-使用已发布的配对 Calcit / `@calcit/procs` **0.30.1-alpha.4**（预发布，
-不是正式 0.30.1）、Node.js 24、Vite 8.3.1、Yarn 4.18.0 和 Caps 0.1.1。
-模块使用正式 Respo 0.16.122、UI 0.7.41、Reel 0.6.39、Alerts 0.10.55、
-js-ffi 0.2.3；不使用 hash 或浮动 main。
-移除未使用的 Lilac、Memof、Markdown、旧 ClojureScript 导入及 HUD 依赖。
+使用正式配对 Calcit / `@calcit/procs` **0.30.1**、Node.js 24、Vite 8.3.1、
+Yarn 4.18.0 和 Caps 0.1.1；升级后重新安装依赖、重启服务并刷新，不混用旧 runtime。
+模块使用正式 Respo 0.16.124、UI 0.8.0、Reel 0.6.41、Alerts 0.10.57、
+js-ffi 0.2.5；不使用 hash 或浮动 main。
+未使用的 Lilac、Memof、Markdown 和旧 ClojureScript 导入保持移除。
+历史源码证实 reload! 的 HUD 并非未使用；本轮恢复 bottom-tip 0.1.5 的
+成功/编译错误页面提示，保留 Unit 返回，不用 raise 或 println 代替 hud!。
+另迁移 17 处旧 Option helper，原 schema 和两项附带测试不变。
 
 ```bash
 caps --strict --ci
@@ -45,6 +48,8 @@ CLI 恢复；旧 `:version nil` 格式曾需已发布 0.28.0-alpha.3 的格式�
 树数据仍允许任意 EDN；导航路径是混合 Map 键/列表索引，操作和 store 已有
 具名类型。localStorage 保留原 `edn-tree-viewer` 键、Map 数据形状与启动恢复，
 继续支持 `:tab-echo` 消息更新；两个内嵌测试覆盖路径读取、更新和旧存储往返。
+启动先完成存档读取、解析和解码，再渲染并注册退出保存；恢复失败不会提前安装
+保存监听覆盖旧值。正式 CI 与真实页面验收仍待完成，不把版本声明当作完成证明。
 
 旧 Map 存档在实际消费边界解码，已构造 Store 做名义匹配，不重复重建树数据。
 字符串位置使用公开 Option 索引接口，预览仍返回原字符；事件回调明确声明 Respo

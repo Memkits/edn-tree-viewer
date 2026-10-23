@@ -13,7 +13,7 @@
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (reel)
             let
-                store $ schema/read-store $ option:unwrap (get reel :store)
+                store $ schema/read-store $ .unwrap (get reel :store)
                 states $ :states store
                 edit-plugin $ use-prompt (>> states :edit)
                   {} (:text "|Edit data") (:multiline? true)
@@ -54,12 +54,12 @@
       :defs $ {}
         'cdn? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def cdn?
-            = |true $ option:unwrap-or (get-env |cdn) |false
+            = |true $ .unwrap-or (get-env |cdn) |false
           :examples $ []
           :schema $ :: 'Bool
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
-            = |dev $ option:unwrap-or (get-env |mode) |release
+            = |dev $ .unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Bool
         'site $ %{} 'CodeEntry (:doc |)
@@ -308,13 +308,13 @@
         'get-by-keys $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-by-keys (data path)
             if (empty? path) data $ let
-                key $ option:unwrap $ first path
+                key $ .unwrap $ first path
                 next $ cond
                     map? data
-                    option:unwrap-or (get data key) nil
+                    .unwrap-or (get data key) nil
                   (list? data)
                     if (number? key)
-                      option:unwrap-or (nth data key) nil
+                      .unwrap-or (nth data key) nil
                       , nil
                   true nil
               recur next $ rest path
@@ -337,18 +337,18 @@
         'peek-in $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn peek-in (data path)
             if (empty? path) data $ let
-                key $ option:unwrap $ first path
+                key $ .unwrap $ first path
                 next $ cond
                     map? data
-                    option:unwrap-or (get data key) nil
+                    .unwrap-or (get data key) nil
                   (list? data)
                     if (number? key)
-                      option:unwrap-or (nth data key) nil
+                      .unwrap-or (nth data key) nil
                       , nil
                   (string? data)
                     if (number? key)
                       if (.contains-index? data key)
-                        option:unwrap $ nth data key
+                        .unwrap $ nth data key
                         , nil
                       , nil
                   true nil
@@ -453,15 +453,15 @@
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
+            match
+              browser/storage-get $ .unwrap $ get config/site :storage-key
+              (:some raw)
+                dispatch! $ schema/Op :hydrate-storage $ schema/read-store (parse-cirru-edn raw)
+              (:none) &unit
             render-app!
             add-watch! *reel :changes $ fn (reel previous) (render-app!)
             listen-devtools! |a dispatch-wire!
             browser/add-event-listener! |beforeunload $ fn (event) (persist-storage!)
-            match
-              browser/storage-get $ option:unwrap $ get config/site :storage-key
-              (:some raw)
-                dispatch! $ schema/Op :hydrate-storage $ schema/read-store (parse-cirru-edn raw)
-              (:none) &unit
             browser/add-event-listener! |message $ fn (event)
               let
                   message $ unsafe-coerce event 'edn-tree-viewer.main/MessageHost
@@ -481,15 +481,15 @@
             :features $ #{} :js-ffi
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def mount-target
-            option:unwrap $ respo.ffi.browser/query-selector |.app
+            .unwrap $ respo.ffi.browser/query-selector |.app
           :examples $ []
           :schema $ :: 'respo.dom/DomElement
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             let
-                store $ schema/read-store $ option:unwrap (get @*reel :store)
+                store $ schema/read-store $ .unwrap (get @*reel :store)
               browser/storage-set!
-                option:unwrap $ get config/site :storage-key
+                .unwrap $ get config/site :storage-key
                 format-cirru-edn $ {}
                   :states $ :states store
                   :data $ :data store
@@ -499,10 +499,14 @@
             :args $ []
             :features $ #{} :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn reload! () (remove-watch! *reel :changes) (clear-cache!)
-            add-watch! *reel :changes $ fn (reel previous) (render-app!)
-            reset! *reel $ decode-map-as (refresh-reel @*reel schema/store edn-tree-viewer.updater/update-wire-store) (:: 'Map 'Tag 'Dynamic)
-            println |Reloaded
+          :code $ quote $ defn reload! ()
+            if (nil? build-errors)
+              do (remove-watch! *reel :changes) (clear-cache!)
+                add-watch! *reel :changes $ fn (reel previous) (render-app!)
+                reset! *reel $ decode-map-as (refresh-reel @*reel schema/store edn-tree-viewer.updater/update-wire-store) (:: 'Map 'Tag 'Dynamic)
+                println |Reloaded
+                hud! |ok~ |Ok
+              hud! |error build-errors
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -535,6 +539,8 @@
             js-ffi.browser :as browser
             js-ffi.shared :as host
             js-ffi.contract :as contract
+            |./calcit.build-errors.mjs :default build-errors
+            |bottom-tip :default hud!
     'edn-tree-viewer.schema $ %{} 'FileEntry
       :defs $ {}
         'Op $ %{} 'CodeEntry (:doc |)
@@ -560,13 +566,13 @@
               let
                   legacy $ decode-map-as data $ :: 'Map 'Tag 'Dynamic
                   states $ decode-map-as
-                    option:unwrap $ get legacy :states
+                    .unwrap $ get legacy :states
                     :: 'Map 'Dynamic 'Dynamic
                   path $ decode-map-as
-                    option:unwrap $ get legacy :path
+                    .unwrap $ get legacy :path
                     :: 'List 'Dynamic
                 Store :states states :data
-                  option:unwrap-or (get legacy :data) nil
+                  .unwrap-or (get legacy :data) nil
                   , :path path
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'edn-tree-viewer.schema/Store)
