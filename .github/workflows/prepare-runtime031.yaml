@@ -43,6 +43,13 @@ jobs:
           set -euo pipefail
           yarn build
           cp -R dist acceptance/dist
+          cp acceptance-fixtures/storage.html acceptance/dist/isolated-storage-fixture.html
+          git diff --exit-code -- calcit.cirru
+      - name: Build isolated UI controls for the real HUD branches
+        run: |
+          set -euo pipefail
+          cp acceptance-fixtures/build-errors.mjs js-out/calcit.build-errors.mjs
+          yarn vite build acceptance-fixtures/hud --base ./ --outDir ../../acceptance/hud-dist
           git diff --exit-code -- calcit.cirru
       - uses: actions/upload-artifact@v7.0.1
         if: always()

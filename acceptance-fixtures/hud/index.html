@@ -1,0 +1,26 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Isolated EDN Tree HUD acceptance</title>
+<style>
+  nav { position:fixed; z-index:1000; top:0; right:0; padding:12px; background:white; border:1px solid #ccc }
+  button { margin:4px }
+</style>
+<nav>
+  <div>Isolated fixture — real reload!, synthetic build-error host module</div>
+  <button id="error">Show synthetic compilation error</button>
+  <button id="clear">Clear error and reload successfully</button>
+</nav>
+<div class="app"></div>
+<script type="module">
+  import { main_$x_, reload_$x_ } from '../../js-out/edn-tree-viewer.main.mjs';
+  import { setSyntheticBuildErrors } from '../../js-out/calcit.build-errors.mjs';
+  main_$x_();
+  document.querySelector('#error').onclick = () => {
+    setSyntheticBuildErrors('Synthetic 0.30.1 compilation error — public test only');
+    reload_$x_();
+  };
+  document.querySelector('#clear').onclick = () => {
+    setSyntheticBuildErrors(null);
+    reload_$x_();
+  };
+</script>

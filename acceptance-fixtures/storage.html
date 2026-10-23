@@ -1,0 +1,19 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Isolated EDN Tree synthetic archive fixture</title>
+<h1>Only this fresh localhost origin's synthetic archive</h1>
+<p>Do not use on an origin containing existing user data.</p>
+<button id="write">Write approved synthetic bad archive</button>
+<button id="read">Read this origin's archive</button>
+<a href="/">Start actual EDN Tree Viewer</a>
+<pre id="result">No storage accessed by this fixture yet.</pre>
+<script type="module">
+  const result = document.querySelector('#result');
+  document.querySelector('#write').onclick = () => {
+    localStorage.setItem('edn-tree-viewer', '|not-a-store');
+    result.textContent = 'Synthetic archive written: |not-a-store';
+  };
+  document.querySelector('#read').onclick = () => {
+    result.textContent = localStorage.getItem('edn-tree-viewer') ?? 'No archive';
+  };
+</script>
