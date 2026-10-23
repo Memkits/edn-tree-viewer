@@ -17,10 +17,10 @@ jobs:
   test:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+      - uses: actions/setup-node@v6.5.0
         with:
           node-version: 24
           package-manager-cache: false
@@ -28,20 +28,25 @@ jobs:
         run: |
           corepack enable
           corepack prepare yarn@4.18.0 --activate
-      - uses: calcit-lang/setup-calcit@ca701be5a471759e442aa053cd100720bbe1f09f # v1.5.0
+      - uses: calcit-lang/setup-calcit@v1.5.0
         with:
           tools: calcit,caps
           caps-version: "0.1.1"
           deps-file: deps.cirru
       - name: Resolve and check frontend
         run: |
+          set -euo pipefail
+          test -f calcit.cirru
+          test -f deps.cirru
+          test ! -e compact.cirru
+          test ! -e package.cirru
           caps --strict --ci
           yarn install --immutable
           caps verify --toolchain
           calcit calcit.cirru edit format
           git diff --exit-code -- calcit.cirru
           calcit calcit.cirru --check-only --all-defs
-          calcit calcit.cirru fix --workflow strict --verify
+          calcit calcit.cirru fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
           calcit calcit.cirru test --require-match
       - name: Select frontend CDN path
         id: asset-path
