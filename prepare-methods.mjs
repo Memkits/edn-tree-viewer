@@ -16,7 +16,9 @@ if(mode==='before'){
  assert.equal(blob(),p.blob);assert.deepEqual(views(),norm(p.before));guard();
  for(const[i,s]of p.sites.entries()){
   writeFileSync('acceptance/before-subtree-'+i+'.json',run('calcit',['tree','show',s.definition,'--path','@'+s.path,'--format','json']));
-  const t=JSON.parse(run('calcit',['query','type-at',s.definition,'--path','@'+s.path+'.1','--format','json']));writeFileSync('acceptance/type-'+i+'.json',JSON.stringify(t));assert.deepEqual(t.diagnostics||[],[]);const m=t.data.static_methods.find(m=>m.name===s.after);assert.ok(m,s.definition+': '+s.path);assert.equal(m.status,'proven');assert.equal(m.definition,s.head==='count'?'calcit.core/&list:count':'calcit.core/&map:merge');
+  const t=JSON.parse(run('calcit',['query','type-at',s.definition,'--path','@'+s.path+'.1','--format','json']));writeFileSync('acceptance/type-'+i+'.json',JSON.stringify(t));assert.deepEqual(t.diagnostics||[],[]);const m=t.data.static_methods.find(m=>m.name===s.after);assert.ok(m,s.definition+': '+s.path);
+  if(s.head==='count'){assert.equal(m.status,'proven');assert.equal(m.definition,'calcit.core/&list:count');assert.equal(m.call_types.returns,"'Number");}
+  else{assert.deepEqual(s.before.slice(1).map(n=>n[0]),['{}','{}']);assert.equal(t.data.inferred_type,":: 'Map 'Tag 'Dynamic");assert.equal(m.status,'open');assert.equal(m.definition,'calcit.core/merge');assert.equal(m.rest_type,'map<tag, dynamic>');assert.equal(m.return_type,'map<tag, dynamic>');}
  }
  const boundary=run('calcit',['query','def','js-ffi.contract/object-field','--format','json']);writeFileSync('acceptance/published-object-field.json',boundary);assert.equal(JSON.parse(boundary).data.code[3][0],'aget');
  writeFileSync('acceptance/before-source.json',JSON.stringify(views()));
