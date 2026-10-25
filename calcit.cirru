@@ -212,7 +212,7 @@
                 (list? x)
                   if
                     and (every? x literal?)
-                      <= (count x) 5
+                      <= (.len x) 5
                     <> $ trim $ format-cirru-edn x
                     <> |List style-folded
                 (set? x) (<> |Set style-folded)
@@ -223,7 +223,7 @@
         'comp-seq-keys $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-seq-keys (data selected on-pick)
             div ({})
-              comp-title $ str "|Seq of: " $ count data
+              comp-title $ str "|Seq of: " $ .len data
               list->
                 {} (:class-name css/column)
                   :style $ {} $ :padding-bottom 200
@@ -240,7 +240,7 @@
                           :return 'Unit
                         on-pick idx d!
                       :style $ if (= idx selected)
-                        merge
+                        .merge
                           {} (:cursor :pointer) (:padding "|2px 8px")
                           {} $ :background-color $ hsl 0 0 95
                         {} (:cursor :pointer) (:padding "|2px 8px")
@@ -273,7 +273,7 @@
         'comp-vector-keys $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-vector-keys (data selected on-pick)
             div ({})
-              comp-title $ str "|Vector of size: " $ to-lispy-string (count data)
+              comp-title $ str "|Vector of size: " $ to-lispy-string (.len data)
               list->
                 {} (:class-name css/column)
                   :style $ {} $ :padding-bottom 200
@@ -281,7 +281,7 @@
                   [] idx $ div
                     {}
                       :style $ if (= idx selected)
-                        merge
+                        .merge
                           {} (:cursor :pointer) (:padding "|2px 8px")
                           {} $ :background-color $ hsl 0 0 95
                         {} (:cursor :pointer) (:padding "|2px 8px")
@@ -431,11 +431,6 @@
             -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
           :examples $ []
           :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
-        'MessageHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait MessageHost (:data 'JsObject)
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
-          :schema $ :: 'Trait
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ println |Dispatch: op
@@ -464,8 +459,7 @@
             browser/add-event-listener! |beforeunload $ fn (event) (persist-storage!)
             browser/add-event-listener! |message $ fn (event)
               let
-                  message $ unsafe-coerce event 'edn-tree-viewer.main/MessageHost
-                  source $ contract/expect-string |message $ .-data message
+                  source $ contract/expect-string |message $ contract/object-field |message event |data
                   data $ parse-cirru-edn source
                 if (enum? data)
                   match data
