@@ -26,6 +26,20 @@ js-ffi 0.2.5；不使用 hash 或浮动 main。
 成功/编译错误页面提示，保留 Unit 返回，不用 raise 或 println 代替 hud!。
 另迁移 17 处旧 Option helper，原 schema 和两项附带测试不变。
 
+本轮将三处已判定为 List 的计数改为 `.len`，两处二元样式 Map 合并改为 `.merge`；
+后者仍绑定原核心 `merge`，异构样式值有意保持开放类型，不冒充闭合证明。
+消息入口复用正式 JS-FFI 0.2.5 的受检 `object-field`，再执行原 String 检查，
+删除仅用于 unchecked 强转的私有 MessageHost，本项目 unsafe 从 1 降至 0。
+有效 `:tab-echo` 数据、字段读取次数和 parse/dispatch 顺序不变；畸形接收者会更早报错。
+这不验证消息的类身份、origin 或 source，也不新增来源过滤策略。
+
+官方 Linux 正式 0.30.1 准备 CI 的原 all-defs 检查 256→255 全部通过，完整 strict、
+原两项附带测试及同两项 native/JS 对照前后均通过。42→41 个定义/7 个 namespace 的完整视图、
+实际接收 Snapshot 和 12 个普通文件 hash 已核验；116 个浏览器生成模块中仅消息入口模块变化。
+临时 Node MessageEvent 夹具验证正式 JS 边界的 String 保留、非 String/null 拒绝及 data 只读一次，
+不是实际 window 消息、浏览器交互或用户存档验收；下述历史页面证据不冒充本轮重验。
+不新增常驻测试/验证脚本、依赖或质量预算，不改 HUD、存档保护及部署路径。
+
 ```bash
 caps --strict --ci
 yarn install --immutable
@@ -57,7 +71,7 @@ CLI 恢复；旧 `:version nil` 格式曾需已发布 0.28.0-alpha.3 的格式�
 旧 Map 存档在实际消费边界解码，已构造 Store 做名义匹配，不重复重建树数据。
 字符串位置使用公开 Option 索引接口，预览仍返回原字符；事件回调明确声明 Respo
 实际提供的 Map 和 dispatch 合同，prompt 文本在解析前检查，不使用 Fn 强转。
-唯一保留的 unsafe 是原生 MessageEvent 宿主身份边界，消息 data 仍经 String 检查。
+消息接收对象及 data 经正式共享边界受检读取，String 检查后才进入 EDN 解析，不保留私有 unsafe 身份断言。
 开放 EDN 数据继续使用 Dynamic，不放宽质量预算或宣称类型债务清零。
 
 COS 仅上传前端 `dist`，使用正式 action v1.2.0 内置 HTML 引用和公开资源
