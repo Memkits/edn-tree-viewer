@@ -1,83 +1,45 @@
+# EDN Tree Viewer
 
-EDN Tree Viewer
-----
+浏览任意 EDN 树数据。库入口 `edn-tree-viewer.core/comp-edn-tree-viewer` 保持原 data / path / styles 参数。
 
-> another way to browse tree data.
+## 使用者需要注意
 
-### Usage
+配对正式 **Calcit / @calcit/procs 0.32.1**、Node 24、Yarn 4.18.0 和 Caps 0.1.1。升级后重新安装完整依赖图、生成 JS、重启服务并刷新，不混用旧 runtime。直接模块使用正式 Respo 0.17.1、UI 0.9.0、Reel 0.7.0、Alerts 0.11.0、JS FFI 0.2.9；UI 的 Router 0.9.0-alpha.4 传递依赖保留，不改用 main/hash。
 
+树数据仍允许任意 EDN，导航路径仍可混合 Map 键与列表索引。原 `edn-tree-viewer` 存储键、Map 存档、Set Data 弹窗和 `:tab-echo` 消息合同保持。启动先读取、解析并解码存档，再渲染和注册退出保存；恢复失败会中止启动，原文不会被退出保存覆盖。不要直接清除坏存档，应先备份和修复原文。JS 引入的 `hud!` 成功/编译错误页面提示保留，不以 raise 或 println 替代。
 
-```cirru
-; edn-tree-viewer.core/comp-edn-tree-viewer
+## 本次迁移
 
-comp-edn-tree-viewer data path styles
-```
+- 官方 formatter 转换七处旧类型写法；既有 schema、文档 metadata 和两项附带测试保持。
+- Respo 入口使用已有 `Enum -> Unit` 的 dispatch!，原 `dispatch-wire!` 仍为外部消息/DevTools 检查 Enum。入口绑定显式开放 Enum 的 DispatchOp 代表定义，支持既有业务操作和匿名 Reel 控制；代表值不发送，不假称所有操作属于闭合业务 Op，不增加包装或解码往返。
+- Set Data 回调明确实际的 Map 事件与 `Enum -> Unit` dispatch 参数，并显式返回 Unit。原 Prompt 文本检查、解析及业务操作构造不变；不以强转或预算放宽代替检查。
+- 配对工具链和 lock，npm 新包龄至少60分钟，无单包例外。两处原固定 Action SHA 改为对应提交相同的精确正式 tag，按维护者选择接受 tag 可移动风险。
 
-### Workflow
+既有 JS 对象边界仍先受检读取 message.data、检查 String 后再解析，不验证 origin/source 或类身份，也不新增来源过滤策略。开放 EDN/异构样式继续使用真实 Dynamic；这次不是类型债务清零或消息安全策略变更。
 
-Workflow https://github.com/calcit-lang/respo-calcit-workflow
+## 开发与验证
 
-使用正式配对 Calcit / `@calcit/procs` **0.30.1**、Node.js 24、Vite 8.3.1、
-Yarn 4.18.0 和 Caps 0.1.1；升级后重新安装依赖、重启服务并刷新，不混用旧 runtime。
-模块使用正式 Respo 0.16.124、UI 0.8.0、Reel 0.6.41、Alerts 0.10.57、
-js-ffi 0.2.5；不使用 hash 或浮动 main。
-未使用的 Lilac、Memof、Markdown 和旧 ClojureScript 导入保持移除。
-历史源码证实 reload! 的 HUD 并非未使用；本轮恢复 bottom-tip 0.1.5 的
-成功/编译错误页面提示，保留 Unit 返回，不用 raise 或 println 代替 hud!。
-另迁移 17 处旧 Option helper，原 schema 和两项附带测试不变。
-
-本轮将三处已判定为 List 的计数改为 `.len`，两处二元样式 Map 合并改为 `.merge`；
-后者仍绑定原核心 `merge`，异构样式值有意保持开放类型，不冒充闭合证明。
-消息入口复用正式 JS-FFI 0.2.5 的受检 `object-field`，再执行原 String 检查，
-删除仅用于 unchecked 强转的私有 MessageHost，本项目 unsafe 从 1 降至 0。
-有效 `:tab-echo` 数据、字段读取次数和 parse/dispatch 顺序不变；畸形接收者会更早报错。
-这不验证消息的类身份、origin 或 source，也不新增来源过滤策略。
-
-官方 Linux 正式 0.30.1 准备 CI 的原 all-defs 检查 256→255 全部通过，完整 strict、
-原两项附带测试及同两项 native/JS 对照前后均通过。42→41 个定义/7 个 namespace 的完整视图、
-实际接收 Snapshot 和 12 个普通文件 hash 已核验；116 个浏览器生成模块中仅消息入口模块变化。
-临时 Node MessageEvent 夹具验证正式 JS 边界的 String 保留、非 String/null 拒绝及 data 只读一次，
-不是实际 window 消息、浏览器交互或用户存档验收；下述历史页面证据不冒充本轮重验。
-不新增常驻测试/验证脚本、依赖或质量预算，不改 HUD、存档保护及部署路径。
-
-```bash
+```sh
 caps --strict --ci
 yarn install --immutable
 caps verify --toolchain
 calcit calcit.cirru --check-only --all-defs
 calcit calcit.cirru fix --workflow strict --verify
 calcit calcit.cirru test --require-match
+yarn build
 yarn dev
 ```
 
-`yarn dev` 先编译一次再启动 Vite。监听源码时另开终端运行
-`calcit calcit.cirru -w`，不需要 concurrently。生产构建运行 `yarn build`；
-设置 `VITE_BASE_URL` 可指定静态资源的 CDN 前缀。
+`yarn dev` 编译一次再启动 Vite；监听源码另开终端运行 `calcit calcit.cirru -w`。只维护 `calcit.cirru` / `deps.cirru`，通过官方 query/tree/edit 修改 Snapshot，不恢复 compact.cirru/package.cirru，不提交 js-out/dist，不添加 concurrently 或重复检查脚本。
 
-源码和依赖以 `calcit.cirru` / `deps.cirru` 为准。历史 compact 快照通过官方
-CLI 恢复；旧 `:version nil` 格式曾需已发布 0.28.0-alpha.3 的格式迁移修复
-（[Calcit #1550](https://github.com/calcit-lang/calcit/issues/1550)），这里只作
-一次性恢复，当前正常检查、编译和 CI 都使用上述配对工具链。
+当前候选通过257个全定义、完整 strict、原两项 native 测试、canonical、正常已发布依赖和构建。实际页面验证了 Set Data、中文/emoji、嵌套 Map、List 的0/false/nil、混合路径及合成存档刷新恢复。本轮不读取真实存档，不把此前0.30.1的坏存档/HUD夹具结果当成本轮重验；源码中的启动保护、HUD和消息读取逻辑保持。
 
-树数据仍允许任意 EDN；导航路径是混合 Map 键/列表索引，操作和 store 已有
-具名类型。localStorage 保留原 `edn-tree-viewer` 键、Map 数据形状与启动恢复，
-继续支持 `:tab-echo` 消息更新；两个内嵌测试覆盖路径读取、更新和旧存储往返。
-启动先完成存档读取、解析和解码，再渲染并注册退出保存；恢复失败不会提前安装
-保存监听覆盖旧值。正式 Linux 隔离验收 39965346668 已通过 256 个定义、完整 strict
-和原两项测试。真实页面已验收嵌套数据、混合路径与刷新恢复；独立合成宿主夹具
-点击真实 reload! 后分别显示错误 HUD 和 Ok。经授权的全新来源坏存档在启动失败、
-重新启动与刷新后仍保留原值；不读取真实存档，不把夹具等同真实编译失败全链路。
+## 前端部署
 
-旧 Map 存档在实际消费边界解码，已构造 Store 做名义匹配，不重复重建树数据。
-字符串位置使用公开 Option 索引接口，预览仍返回原字符；事件回调明确声明 Respo
-实际提供的 Map 和 dispatch 合同，prompt 文本在解析前检查，不使用 Fn 强转。
-消息接收对象及 data 经正式共享边界受检读取，String 检查后才进入 EDN 解析，不保留私有 unsafe 身份断言。
-开放 EDN 数据继续使用 Dynamic，不放宽质量预算或宣称类型债务清零。
+设置 `VITE_BASE_URL` 指定 CDN 前缀。COS 仅上传 dist/，精确正式 action v1.2.0 内置 HTML 引用和公开资源 verify，不复制校验脚本。原 PR 编号/run/attempt 前缀、main 条件、权限与 `/web-assets/repo/Memkits/edn-tree-viewer` rsync 目的地保持，PR 不运行生产 rsync。不合并或部署生产，不发布 Git/npm。
 
-COS 仅上传前端 `dist`，使用正式 action v1.2.0 内置 HTML 引用和公开资源
-verify，不复制额外校验脚本。PR 前缀包含 PR 编号、run id 与 attempt；
-原服务器路径保持不变，仅 main 发布，PR 不覆盖生产资源。
+模板：[respo-calcit-workflow](https://github.com/calcit-lang/respo-calcit-workflow)。
 
-### License
+## License
 
 MIT
