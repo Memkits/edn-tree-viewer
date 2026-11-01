@@ -6,7 +6,7 @@
     {} (:description |) (:init-fn 'edn-tree-viewer.main/main!) (:mode :js) (:reload-fn 'edn-tree-viewer.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/ |alerts.calcit/ |js-ffi/
-      :type-slots $ {} $ :dispatch-op |edn-tree-viewer.schema/Op
+      :type-slots $ {} $ :dispatch-op |edn-tree-viewer.schema/DispatchOp
   :files $ {}
     'edn-tree-viewer.comp.container $ %{} 'FileEntry
       :defs $ {} $ 'comp-container
@@ -28,8 +28,12 @@
                   {} $ :style $ {} (:padding |8px)
                   button $ {} (:class-name css/button-primary) (:inner-text "|Set Data")
                     :on-click $ fn (event dispatch!)
+                      hint-fn $ Fn (Map Tag Dynamic)
+                        Fn Enum $ -> Unit
+                        -> Unit
                       edit-plugin .show dispatch! $ fn (result)
                         dispatch! $ schema/Op :update-data $ parse-cirru-edn (decode-map-as result 'String)
+                      , &unit
                   =< nil 0
                 comp-edn-tree-viewer (:data store) (:path store)
                   {}
@@ -38,8 +42,7 @@
                 edit-plugin .render
                 when dev? $ comp-reel (>> states :reel) reel $ {}
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic) (-> respo.schema/Component)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.comp.container
           :require (respo-ui.core :as ui) (respo-ui.css :as css)
@@ -56,17 +59,17 @@
           :code $ quote $ def cdn?
             = |true $ .unwrap-or (get-env |cdn) |false
           :examples $ []
-          :schema $ :: 'Bool
+          :schema $ quote Bool
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
             = |dev $ .unwrap-or (get-env |mode) |release
           :examples $ []
-          :schema $ :: 'Bool
+          :schema $ quote Bool
         'site $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def site
             {} (:dev-ui |http://localhost:8100/main-fonts.css) (:release-ui |http://cdn.tiye.me/favored-fonts/main-fonts.css) (:cdn-url |http://cdn.tiye.me/edn-tree-viewer/) (:title "|EDN Tree Viewer") (:icon |http://cdn.tiye.me/logo/memkits.png) (:storage-key |edn-tree-viewer)
           :examples $ []
-          :schema $ :: 'Map 'Tag 'String
+          :schema $ quote $ Map Tag String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.config
     'edn-tree-viewer.core $ %{} 'FileEntry
@@ -126,8 +129,7 @@
                     [] -1 $ div $ {}
                       :style $ {} $ :width 200
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic (:: 'List 'Dynamic) (:: 'Map 'Tag 'Dynamic)
+          :schema $ quote $ Fn Dynamic (List Dynamic) (Map Tag Dynamic) (-> respo.schema/Component)
         'comp-literal $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-literal (x)
             cond
@@ -164,8 +166,7 @@
                   :style $ {} $ :color (hsl 120 80 40)
               true $ <> $ to-lispy-string x
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> respo.schema/Component)
         'comp-map-keys $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-map-keys (data selected on-pick)
             div
@@ -182,24 +183,19 @@
                           {} $ :background-color $ hsl 0 0 95
                         :class-name $ str-spaced style-clickable-item style-pair
                         :on-click $ fn (e d!)
-                          hint-fn $ {}
-                            :args $ [] (:: 'Map 'Tag 'Dynamic)
-                              :: 'Fn $ {}
-                                :args $ [] 'Dynamic
-                                :rest 'Dynamic
-                                :return 'Unit
-                            :return 'Unit
+                          hint-fn $ Fn (Map Tag Dynamic)
+                            Fn Dynamic & Dynamic $ -> Unit
+                            -> Unit
                           on-pick k d!
                       comp-literal k
                       =< 8 nil
                       comp-preview v
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] (:: 'Map 'Dynamic 'Dynamic) 'Dynamic $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] 'Dynamic $ :: 'Fn
-                  {} (:return 'Unit)
-                    :args $ [] 'Enum
+          :schema $ quote $ Fn (Map Dynamic Dynamic) Dynamic
+            Fn Dynamic
+              Fn Enum $ -> Unit
+              -> Unit
+            -> respo.schema/Component
         'comp-preview $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-preview (x)
             span
@@ -218,8 +214,7 @@
                 (set? x) (<> |Set style-folded)
                 true $ <> $ to-lispy-string x
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> respo.schema/Component)
         'comp-seq-keys $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-seq-keys (data selected on-pick)
             div ({})
@@ -231,13 +226,9 @@
                   [] idx $ div
                     {}
                       :on-click $ fn (e d!)
-                        hint-fn $ {}
-                          :args $ [] (:: 'Map 'Tag 'Dynamic)
-                            :: 'Fn $ {}
-                              :args $ [] 'Dynamic
-                              :rest 'Dynamic
-                              :return 'Unit
-                          :return 'Unit
+                        hint-fn $ Fn (Map Tag Dynamic)
+                          Fn Dynamic & Dynamic $ -> Unit
+                          -> Unit
                         on-pick idx d!
                       :style $ if (= idx selected)
                         .merge
@@ -248,28 +239,25 @@
                     =< 4 nil
                     comp-preview item
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] (:: 'List 'Dynamic) 'Dynamic $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] 'Number $ :: 'Fn
-                  {} (:return 'Unit)
-                    :args $ [] 'Enum
+          :schema $ quote $ Fn (List Dynamic) Dynamic
+            Fn Number
+              Fn Enum $ -> Unit
+              -> Unit
+            -> respo.schema/Component
         'comp-string-preview $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-string-preview (t)
             div
               {} $ :style $ {} (:display :inline-block) (:max-width |50vw) (:vertical-align :top)
               <> t
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'String
+          :schema $ quote $ Fn String (-> respo.schema/Component)
         'comp-title $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-title (x)
             div
               {} $ :class-name $ str-spaced css/font-fancy style-title
               <> x
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'String
+          :schema $ quote $ Fn String (-> respo.schema/Component)
         'comp-vector-keys $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-vector-keys (data selected on-pick)
             div ({})
@@ -287,24 +275,19 @@
                         {} (:cursor :pointer) (:padding "|2px 8px")
                       :class-name style-clickable-item
                       :on-click $ fn (e d!)
-                        hint-fn $ {}
-                          :args $ [] (:: 'Map 'Tag 'Dynamic)
-                            :: 'Fn $ {}
-                              :args $ [] 'Dynamic
-                              :rest 'Dynamic
-                              :return 'Unit
-                          :return 'Unit
+                        hint-fn $ Fn (Map Tag Dynamic)
+                          Fn Dynamic & Dynamic $ -> Unit
+                          -> Unit
                         on-pick idx d!
                     comp-literal idx
                     =< 4 nil
                     comp-preview item
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] (:: 'List 'Dynamic) 'Dynamic $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] 'Number $ :: 'Fn
-                  {} (:return 'Unit)
-                    :args $ [] 'Enum
+          :schema $ quote $ Fn (List Dynamic) Dynamic
+            Fn Number
+              Fn Enum $ -> Unit
+              -> Unit
+            -> respo.schema/Component
         'get-by-keys $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-by-keys (data path)
             if (empty? path) data $ let
@@ -319,8 +302,7 @@
                   true nil
               recur next $ rest path
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic (List Dynamic) (-> Dynamic)
           :tests $ [] $ %{} 'TestEntry (:name |nested-edn)
             :code $ quote $ let
                 data $ {} $ :items ([] |one |two)
@@ -332,8 +314,7 @@
           :code $ quote $ defn literal? (x)
             or (nil? x) (bool? x) (number? x) (tag? x) (string? x) (symbol? x)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Bool)
         'peek-in $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn peek-in (data path)
             if (empty? path) data $ let
@@ -354,8 +335,7 @@
                   true nil
               recur next $ rest path
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic (List Dynamic) (-> Dynamic)
         'style-clickable-item $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-clickable-item
             {} $ |&:hover $ {}
@@ -430,21 +410,19 @@
           :code $ quote $ defref *reel
             -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Ref (Map Tag Dynamic)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ println |Dispatch: op
             reset! *reel $ reel-updater edn-tree-viewer.updater/update-wire-store @*reel op
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Enum
+          :schema $ quote $ Fn Enum (-> Unit)
         'dispatch-wire! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch-wire! (op)
             if (enum? op) (dispatch! op) (raise |Expected-Enum-operation)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Unit)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -470,14 +448,12 @@
             println "|App started."
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def mount-target
             .unwrap $ respo.ffi.browser/query-selector |.app
           :examples $ []
-          :schema $ :: 'respo.dom/DomElement
+          :schema $ quote respo.dom/DomElement
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             let
@@ -489,9 +465,7 @@
                   :data $ :data store
                   :path $ :path store
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -503,22 +477,16 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
-            render! mount-target (comp-container @*reel) dispatch-wire!
+            render! mount-target (comp-container @*reel) dispatch!
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'snippets $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn snippets () (println config/cdn?)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.main
           :require
@@ -537,21 +505,28 @@
             |bottom-tip :default hud!
     'edn-tree-viewer.schema $ %{} 'FileEntry
       :defs $ {}
+        'DispatchOp $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ def DispatchOp
+            :: :states ([]) nil
+          :examples $ []
+          :schema $ quote Enum
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
-            :states (:: 'List 'Dynamic) 'Dynamic
+            :states
+              quote $ List Dynamic
+              , 'Dynamic
             :hydrate-storage 'edn-tree-viewer.schema/Store
             :update-data 'Dynamic
-            :path $ :: 'List 'Dynamic
+            :path $ quote $ List Dynamic
           :examples $ []
-          :schema $ :: 'EnumDef
+          :schema $ quote EnumDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
-            :states $ :: 'Map 'Dynamic 'Dynamic
+            :states $ quote $ Map Dynamic Dynamic
             :data 'Dynamic
-            :path $ :: 'List 'Dynamic
+            :path $ quote $ List Dynamic
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'read-store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-store (data)
             if (struct? data)
@@ -569,15 +544,14 @@
                   .unwrap-or (get legacy :data) nil
                   , :path path
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'edn-tree-viewer.schema/Store)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> edn-tree-viewer.schema/Store)
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             Store :states
               {} $ :cursor $ []
               , :data nil :path $ []
           :examples $ []
-          :schema $ :: 'edn-tree-viewer.schema/Store
+          :schema $ quote edn-tree-viewer.schema/Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.schema
     'edn-tree-viewer.updater $ %{} 'FileEntry
@@ -588,8 +562,7 @@
               updater (schema/read-store store) op (decode-map-as op-id 'String) (decode-map-as op-time 'Number)
               raise |Expected-Enum-operation
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'edn-tree-viewer.schema/Store)
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic Dynamic Dynamic (-> edn-tree-viewer.schema/Store)
         'updater $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn updater (store op op-id op-time)
             match op
@@ -605,8 +578,7 @@
                 assoc store :path $ decode-map-as path $ :: 'List 'Dynamic
               _ $ do (println |Unknown-op: op) store
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'edn-tree-viewer.schema/Store)
-            :args $ [] 'edn-tree-viewer.schema/Store 'Enum 'String 'Number
+          :schema $ quote $ Fn edn-tree-viewer.schema/Store Enum String Number (-> edn-tree-viewer.schema/Store)
           :tests $ [] $ %{} 'TestEntry (:name |data-path-storage)
             :code $ quote $ let
                 data $ {} $ :items ([] |one |two)
