@@ -2,20 +2,16 @@
 
 浏览任意 EDN 树数据。库入口 `edn-tree-viewer.core/comp-edn-tree-viewer` 保持原 data / path / styles 参数。
 
-## 使用者需要注意
+## 使用者影响
 
-配对正式 **Calcit / @calcit/procs 0.32.1**、Node 24、Yarn 4.18.0 和 Caps 0.1.1。升级后重新安装完整依赖图、生成 JS、重启服务并刷新，不混用旧 runtime。直接模块使用正式 Respo 0.17.1、UI 0.9.0、Reel 0.7.0、Alerts 0.11.0、JS FFI 0.2.9；UI 的 Router 0.9.0-alpha.4 传递依赖保留，不改用 main/hash。
+升级到正式 **Calcit / @calcit/procs 0.35.1** 后，请重新安装依赖、编译并刷新页面。`Set Data`、`edn-tree-viewer` Map 存档、`:tab-echo` 消息和页面 HUD 继续使用原有合同。恢复存档成功后才注册离页保存。
 
-树数据仍允许任意 EDN，导航路径仍可混合 Map 键与列表索引。原 `edn-tree-viewer` 存储键、Map 存档、Set Data 弹窗和 `:tab-echo` 消息合同保持。启动先读取、解析并解码存档，再渲染和注册退出保存；恢复失败会中止启动，原文不会被退出保存覆盖。不要直接清除坏存档，应先备份和修复原文。JS 引入的 `hud!` 成功/编译错误页面提示保留，不以 raise 或 println 替代。
+标量颜色和显示由 `Scalar` union 决定，树和导航路径仍接受异构 EDN，包括 Bool 和 List 类型的 Map 键。Map 列表使用行号区分渲染节点，点击仍用原 EDN 键查找。直接调用 `comp-edn-tree-viewer` 时，样式值采用 Respo 的 `CssValue`，可省略没有值的属性。
 
 ## 本次迁移
 
-- 官方 formatter 转换七处旧类型写法；既有 schema、文档 metadata 和两项附带测试保持。
-- Respo 入口使用已有 `Enum -> Unit` 的 dispatch!，原 `dispatch-wire!` 仍为外部消息/DevTools 检查 Enum。入口绑定显式开放 Enum 的 DispatchOp 代表定义，支持既有业务操作和匿名 Reel 控制；代表值不发送，不假称所有操作属于闭合业务 Op，不增加包装或解码往返。
-- Set Data 回调明确实际的 Map 事件与 `Enum -> Unit` dispatch 参数，并显式返回 Unit。原 Prompt 文本检查、解析及业务操作构造不变；不以强转或预算放宽代替检查。
-- 配对工具链和 lock，npm 新包龄至少60分钟，无单包例外。两处原固定 Action SHA 改为对应提交相同的精确正式 tag，按维护者选择接受 tag 可移动风险。
-
-既有 JS 对象边界仍先受检读取 message.data、检查 String 后再解析，不验证 origin/source 或类身份，也不新增来源过滤策略。开放 EDN/异构样式继续使用真实 Dynamic；这次不是类型债务清零或消息安全策略变更。
+- Reel 使用 `State<Op, Store>`。Alerts 的 `:states` 事件在入口校验坐标并转为业务操作，Reel 控制独立解码。
+- 依赖全部使用正式版本。Respo **0.19.4**、UI **0.15.1**、Reel **0.9.2**、Alerts **0.13.1**、JS-FFI **0.2.13**，传递依赖 Router **0.12.1**。
 
 ## 开发与验证
 
@@ -32,7 +28,7 @@ yarn dev
 
 `yarn dev` 编译一次再启动 Vite；监听源码另开终端运行 `calcit calcit.cirru -w`。只维护 `calcit.cirru` / `deps.cirru`，通过官方 query/tree/edit 修改 Snapshot，不恢复 compact.cirru/package.cirru，不提交 js-out/dist，不添加 concurrently 或重复检查脚本。
 
-当前候选通过257个全定义、完整 strict、原两项 native 测试、canonical、正常已发布依赖和构建。实际页面验证了 Set Data、中文/emoji、嵌套 Map、List 的0/false/nil、混合路径及合成存档刷新恢复。本轮不读取真实存档，不把此前0.30.1的坏存档/HUD夹具结果当成本轮重验；源码中的启动保护、HUD和消息读取逻辑保持。
+本地通过完整 strict、原两项附带测试和 Vite 构建。生成 JS 验证了异构 Map 键点击、标量显示、Set Data 弹窗打开和 Reel 操作。实际浏览器刷新和坏存档保护尚未重跑。
 
 ## 前端部署
 
