@@ -11,7 +11,7 @@
     'edn-tree-viewer.comp.container $ %{} 'FileEntry
       :defs $ {} $ 'comp-container
         %{} 'CodeEntry (:doc |)
-          :code $ quote $ defcomp comp-container (reel)
+          :code $ quote $ defcomp comp-container (reel on-control on-op)
             let
                 store $ :store reel
                 states $ :states store
@@ -29,21 +29,24 @@
                   button $ {} (:class-name css/button-primary) (:inner-text "|Set Data")
                     :on-click $ fn (event dispatch!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn AnyEnum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       edit-plugin .show dispatch! $ fn (result)
                         hint-fn $ Fn String $ -> Unit
-                        dispatch! $ schema/Op :update-data $ parse-cirru-edn result
+                        on-op $ schema/Op :update-data $ parse-cirru-edn result
                       , &unit
                   respo.comp.space/space-y 0
                 comp-edn-tree-viewer (:data store) (:path store)
                   {} $ :border $ str "|1px solid " (ui/hsl 0 0 90)
                 edit-plugin .render
                 if dev?
-                  Option :some $ reel.comp.reel/comp-typed-reel (>> states :reel) reel $ {}
+                  Option :some $ reel.comp.reel/comp-typed-reel (>> states :reel) reel ({}) on-control
                   Option :none
           :examples $ []
-          :schema $ quote $ Fn (reel.typed/State edn-tree-viewer.schema/Op edn-tree-viewer.schema/Store) (-> respo.schema/Component)
+          :schema $ quote $ Fn (reel.typed/State edn-tree-viewer.schema/Op edn-tree-viewer.schema/Store)
+            Fn reel.typed/Control $ -> Unit
+            Fn edn-tree-viewer.schema/Op $ -> Unit
+            -> respo.schema/Component
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.comp.container
           :require (respo-ui.core :as ui) (respo-ui.css :as css)
@@ -201,7 +204,7 @@
                         :class-name $ str-spaced style-clickable-item style-pair
                         :on-click $ fn (e d!)
                           hint-fn $ Fn respo.schema/RespoEvent
-                            Fn AnyEnum $ -> Unit
+                            Fn edn-tree-viewer.schema/Op $ -> Unit
                             -> Unit
                           on-pick k d!
                       comp-literal k
@@ -210,7 +213,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Dynamic Dynamic) (Option Dynamic)
             Fn Dynamic
-              Fn AnyEnum $ -> Unit
+              Fn edn-tree-viewer.schema/Op $ -> Unit
               -> Unit
             -> respo.schema/Component
         'comp-preview $ %{} 'CodeEntry (:doc |)
@@ -244,7 +247,7 @@
                     {}
                       :on-click $ fn (e d!)
                         hint-fn $ Fn respo.schema/RespoEvent
-                          Fn AnyEnum $ -> Unit
+                          Fn edn-tree-viewer.schema/Op $ -> Unit
                           -> Unit
                         on-pick idx d!
                       :style $ if
@@ -259,7 +262,7 @@
           :examples $ []
           :schema $ quote $ Fn (List Dynamic) (Option Dynamic)
             Fn Number
-              Fn AnyEnum $ -> Unit
+              Fn edn-tree-viewer.schema/Op $ -> Unit
               -> Unit
             -> respo.schema/Component
         'comp-string-preview $ %{} 'CodeEntry (:doc |)
@@ -295,7 +298,7 @@
                       :class-name style-clickable-item
                       :on-click $ fn (e d!)
                         hint-fn $ Fn respo.schema/RespoEvent
-                          Fn AnyEnum $ -> Unit
+                          Fn edn-tree-viewer.schema/Op $ -> Unit
                           -> Unit
                         on-pick idx d!
                     comp-literal idx
@@ -304,7 +307,7 @@
           :examples $ []
           :schema $ quote $ Fn (List Dynamic) (Option Dynamic)
             Fn Number
-              Fn AnyEnum $ -> Unit
+              Fn edn-tree-viewer.schema/Op $ -> Unit
               -> Unit
             -> respo.schema/Component
         'get-by-keys $ %{} 'CodeEntry (:doc |)
@@ -441,13 +444,13 @@
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ println |Dispatch: op
-            reset! *reel $ match (schema/resolve-op op)
+            reset! *reel $ match op
               (reel.typed/Control control) (reel.typed/apply-control updater @*reel control)
               (edn-tree-viewer.schema/Op action)
                 reel.typed/record-op updater @*reel action (generate-id!) (host/now-ms)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi) (:open :decode)
+          :schema $ quote $ Fn edn-tree-viewer.schema/ResolvedOp (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -458,7 +461,7 @@
               (:none) &unit
             render-app!
             add-watch! *reel :changes $ fn (reel previous) (render-app!)
-            listen-devtools! |a dispatch!
+            listen-devtools! |a on-control!
             browser/add-event-listener! |beforeunload $ fn (event) (persist-storage!)
             browser/add-event-listener! |message $ fn (event)
               let
@@ -479,6 +482,10 @@
             .unwrap $ respo.ffi.browser/query-selector |.app
           :examples $ []
           :schema $ quote $ Fn (-> respo.dom/DomElement) (:features :js-ffi)
+        'on-control! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn on-control! (control) (dispatch! control)
+          :examples $ []
+          :schema $ quote $ Fn reel.typed/Control (-> Unit)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             let
@@ -506,8 +513,12 @@
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-with! (mount-target)
-              fn () $ comp-container @*reel
-              , dispatch!
+              fn () $ comp-container @*reel on-control! $ fn (op)
+                hint-fn $ Fn edn-tree-viewer.schema/Op $ -> Unit
+                dispatch! op
+              fn (raw)
+                hint-fn $ Fn *dispatch-op $ -> Unit
+                dispatch! $ schema/resolve-op raw
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'snippets $ %{} 'CodeEntry (:doc |)
@@ -530,7 +541,8 @@
             |bottom-tip :default hud!
     'edn-tree-viewer.schema $ %{} 'FileEntry
       :defs $ {}
-        'DispatchOp $ %{} 'CodeEntry (:doc |)
+        'DispatchOp $ %{} 'CodeEntry
+          :doc "|Respo event boundary remains open for the anonymous :states event emitted by Alerts Prompt. resolve-op validates and converts that event into the app Op."
           :code $ quote $ def DispatchOp
             :: :states ([]) nil
           :examples $ []
@@ -574,17 +586,14 @@
           :schema $ quote $ Fn Dynamic (-> edn-tree-viewer.schema/Store)
         'resolve-op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resolve-op (raw)
-            match (reel.typed/decode-control raw)
-              (:some control) control
-              (:none)
-                match raw
-                  (:states cursor state)
-                    Op :states
-                      decode-map-as cursor $ List respo.schema/CoordKey
-                      , state
-                  _ $ decode-map-as raw Op
+            match raw
+              (:states cursor state)
+                Op :states
+                  decode-map-as cursor $ List respo.schema/CoordKey
+                  , state
+              _ $ decode-map-as raw Op
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> edn-tree-viewer.schema/ResolvedOp) (:open :decode)
+          :schema $ quote $ Fn AnyEnum (-> edn-tree-viewer.schema/Op) (:open :decode)
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             Store :states
