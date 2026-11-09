@@ -86,23 +86,23 @@
               {}
                 :class-name $ str-spaced css/expand css/column
                 :style styles
-              list->
+              keyed->
                 {} (:class-name css/row)
                   :style $ {} $ :font-size 13
                 -> path $ map-indexed $ fn (idx k)
-                  [] idx $ span
+                  keyed-element idx $ span
                     {}
                       :class-name $ str-spaced style-clickable-item style-path-seg
                       :on-click $ fn (e d!)
                         d! $ Op :path $ take path (inc idx)
                     comp-literal k
-              list->
+              keyed->
                 {} $ :class-name $ str-spaced css/expand css/row style-content
                 concat
                   -> path .len inc range $ map $ fn (idx)
                     let
                         found $ get-by-keys data $ take path idx
-                      [] idx $ div
+                      keyed-element idx $ div
                         {} $ :class-name style-entry
                         match found
                           (:some d)
@@ -114,7 +114,11 @@
                                     d! $ Op :path $ -> (take path idx) (conj result)
                               (list? d)
                                 comp-vector-keys d
-                                  peek-in path $ [] idx
+                                  match
+                                    peek-in path $ [] idx
+                                    (:some key)
+                                      if (number? key) (Option :some key) (Option :none)
+                                    (:none) (Option :none)
                                   fn (result d!)
                                     d! $ Op :path $ -> (take path idx) (conj result)
                               ; (seq? d)
@@ -132,7 +136,7 @@
                                 {} $ :style $ {} (:padding "|0 6px")
                                 comp-literal nil
                   []
-                    [] -2 $ div
+                    keyed-element -2 $ div
                       {} $ :class-name $ str-spaced css/expand style-end-value
                       code $ {} (:class-name css/font-code)
                         :style $ {} (:line-height |16px) (:font-size 12)
@@ -140,7 +144,7 @@
                           (:some v)
                             if (literal? v) (str v) (format-cirru-edn v)
                           (:none) (str nil)
-                    [] -1 $ div $ {}
+                    keyed-element -1 $ div $ {}
                       :style $ {} $ :width 200
           :examples $ []
           :schema $ quote $ Fn Dynamic (List Dynamic) (Map Tag respo.schema/CssValue) (-> respo.schema/Component)
@@ -190,12 +194,12 @@
             div
               {} $ :class-name css/column
               comp-title |Map
-              list->
+              keyed->
                 {} (:class-name css/column)
                   :style $ {} $ :padding-bottom 200
                 -> data (.to-list)
                   map-indexed $ fn (idx pair)
-                    let[] (k v) pair $ [] idx $ div
+                    let[] (k v) pair $ keyed-element idx $ div
                       {}
                         :style $ if
                           = (Option :some k) selected
@@ -239,11 +243,11 @@
           :code $ quote $ defcomp comp-seq-keys (data selected on-pick)
             div ({})
               comp-title $ str "|Seq of: " $ .len data
-              list->
+              keyed->
                 {} (:class-name css/column)
                   :style $ {} $ :padding-bottom 200
                 -> data $ map-indexed $ fn (idx item)
-                  [] idx $ div
+                  keyed-element idx $ div
                     {}
                       :on-click $ fn (e d!)
                         hint-fn $ Fn respo.schema/RespoEvent
@@ -283,11 +287,11 @@
           :code $ quote $ defcomp comp-vector-keys (data selected on-pick)
             div ({})
               comp-title $ str "|Vector of size: " $ to-lispy-string (.len data)
-              list->
+              keyed->
                 {} (:class-name css/column)
                   :style $ {} $ :padding-bottom 200
                 -> data $ map-indexed $ fn (idx item)
-                  [] idx $ div
+                  keyed-element idx $ div
                     {}
                       :style $ if
                         = (Option :some idx) selected
@@ -305,7 +309,7 @@
                     respo.comp.space/space-x 4
                     comp-preview item
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) (Option Dynamic)
+          :schema $ quote $ Fn (List Dynamic) (Option Number)
             Fn Number
               Fn edn-tree-viewer.schema/Op $ -> Unit
               -> Unit
@@ -432,7 +436,7 @@
             respo-ui.css :as css
             respo-ui.core :as ui
             respo-ui.core :refer $ hsl
-            respo.core :refer $ defcomp <> list-> div span code
+            respo.core :refer $ defcomp <> keyed-> keyed-element div span code
             edn-tree-viewer.schema :refer $ Op
     'edn-tree-viewer.main $ %{} 'FileEntry
       :defs $ {}

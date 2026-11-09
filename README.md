@@ -4,7 +4,7 @@
 
 ## 使用者影响
 
-升级到正式 **Calcit / @calcit/procs 0.38.0** 后，请重新安装依赖、编译并刷新页面。`Set Data`、`edn-tree-viewer` Map 存档、`:tab-echo` 消息和页面 HUD 继续使用原有合同。恢复存档成功后才注册离页保存。 路径查找函数 `get-by-keys` 和 `peek-in` 现在返回 `Option`，调用方可区分缺失路径与实际的 `nil` 值。
+升级到正式 **Calcit / @calcit/procs 0.40.0** 后，请重新安装依赖、编译并刷新页面。`Set Data`、`edn-tree-viewer` Map 存档、`:tab-echo` 消息和页面 HUD 继续使用原有合同。恢复存档成功后才注册离页保存。 路径查找函数 `get-by-keys` 和 `peek-in` 现在返回 `Option`，调用方可区分缺失路径与实际的 `nil` 值。
 
 标量颜色和显示由 `Scalar` union 决定，树和导航路径仍接受异构 EDN，包括 Bool 和 List 类型的 Map 键。Map 列表使用行号区分渲染节点，点击仍用原 EDN 键查找。直接调用 `comp-edn-tree-viewer` 时，样式值采用 Respo 的 `CssValue`，可省略没有值的属性。
 
