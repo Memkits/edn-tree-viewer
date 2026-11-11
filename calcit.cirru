@@ -143,7 +143,7 @@
                     keyed-element -1 $ div $ {}
                       :style $ {} $ :width 200
           :examples $ []
-          :schema $ quote $ Fn Dynamic (List Dynamic) (Map Tag respo.schema/CssValue) (-> respo.schema/Component)
+          :schema $ quote $ Fn T (List Dynamic) (Map Tag respo.schema/CssValue) (-> respo.schema/Component) (:generics T)
         'comp-literal $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-literal (x)
             if
@@ -184,7 +184,7 @@
                     :style $ {} $ :color (hsl 120 80 40)
                 true $ <> $ to-lispy-string x
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> respo.schema/Component)
+          :schema $ quote $ Fn T (-> respo.schema/Component) (:generics T)
         'comp-map-keys $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-map-keys (data selected on-pick)
             div
@@ -235,7 +235,7 @@
                 (set? x) (<> |Set style-folded)
                 true $ <> $ to-lispy-string x
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> respo.schema/Component)
+          :schema $ quote $ Fn T (-> respo.schema/Component) (:generics T)
         'comp-seq-keys $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-seq-keys (data selected on-pick)
             div ({})
@@ -348,7 +348,7 @@
           :code $ quote $ defn literal? (x)
             or (nil? x) (bool? x) (number? x) (tag? x) (string? x) (symbol? x)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn T (-> Bool) (:generics T)
         'peek-in $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn peek-in (data path)
             if (empty? path) (Some data)
