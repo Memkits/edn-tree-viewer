@@ -114,16 +114,12 @@
                                     d! $ Op :path $ -> (take path idx) (conj result)
                               (list? d)
                                 comp-vector-keys d
-                                  match
-                                    peek-in path $ [] idx
-                                    (:some key)
-                                      if (number? key) (Some key) None
-                                    (:none) None
+                                  selected-index $ peek-in path $ [] idx
                                   fn (result d!)
                                     d! $ Op :path $ -> (take path idx) (conj result)
                               ; (seq? d)
                                 comp-seq-keys d
-                                  peek-in path $ [] idx
+                                  selected-index $ peek-in path $ [] idx
                                   fn (result d!)
                                     d! $ Op :path $ -> (take path idx) (conj result)
                               true $ div ({}) (comp-title |Literal)
@@ -215,11 +211,12 @@
                       respo.comp.space/space-x 8
                       comp-preview v
           :examples $ []
-          :schema $ quote $ Fn (Map Dynamic Dynamic) (Option Dynamic)
-            Fn Dynamic
+          :schema $ quote $ Fn (Map K V) (Option K)
+            Fn K
               Fn Op $ -> Unit
               -> Unit
             -> respo.schema/Component
+            :generics K V
         'comp-preview $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-preview (x)
             span
@@ -264,11 +261,12 @@
                     respo.comp.space/space-x 4
                     comp-preview item
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) (Option Dynamic)
+          :schema $ quote $ Fn (List V) (Option Number)
             Fn Number
               Fn Op $ -> Unit
               -> Unit
             -> respo.schema/Component
+            :generics V
         'comp-string-preview $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-string-preview (t)
             div
@@ -309,11 +307,12 @@
                     respo.comp.space/space-x 4
                     comp-preview item
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) (Option Number)
+          :schema $ quote $ Fn (List V) (Option Number)
             Fn Number
               Fn Op $ -> Unit
               -> Unit
             -> respo.schema/Component
+            :generics V
         'get-by-keys $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-by-keys (data path)
             if (empty? path) (Some data)
@@ -370,18 +369,30 @@
           :examples $ []
           :schema $ quote $ Fn Dynamic (List Dynamic)
             -> $ Option Dynamic
+        'selected-index $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn selected-index (selected)
+            match selected
+              (:none) None
+              (:some key)
+                if (number? key) (Some key) None
+          :examples $ []
+          :schema $ quote $ Fn (Option T)
+            -> $ Option Number
+            :generics T
         'style-clickable-item $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-clickable-item
             {} $ |&:hover $ {}
               :background-color $ hsl 0 0 95
               :cursor :pointer
           :examples $ []
+          :schema $ quote String
         'style-content $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-content
             {} $ |& $ {} (:overflow :auto) (:font-size 13)
               :border-top $ str "|1px solid " $ hsl 0 0 90
               :padding-right |50vw
           :examples $ []
+          :schema $ quote String
         'style-end-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-end-value
             {} $ |& $ {}
@@ -395,6 +406,7 @@
               :padding-bottom 200
               :padding-right 80
           :examples $ []
+          :schema $ quote String
         'style-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-entry
             {} $ |& $ {} (:padding "|4px 0px")
@@ -402,32 +414,38 @@
               :overflow :auto
               :flex-shrink |0
           :examples $ []
+          :schema $ quote String
         'style-folded $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-folded
             {} $ |& $ {} (:padding "|0 8px") (:border-radius |8px)
               :border $ str "|1px solid " $ hsl 220 90 88
               :background-color $ hsl 220 80 98
           :examples $ []
+          :schema $ quote String
         'style-pair $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-pair
             {} $ |& $ {} (:cursor :pointer) (:padding "|2px 8px") (:font-size 11)
           :examples $ []
+          :schema $ quote String
         'style-path-seg $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-path-seg
             {} $ |& $ {} (:display :inline-block) (:padding "|0 4px")
           :examples $ []
+          :schema $ quote String
         'style-preview $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-preview
             {} $ |& $ {}
               :color $ hsl 0 0 70
               :font-size 12
           :examples $ []
+          :schema $ quote String
         'style-title $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-title
             {} $ |& $ {}
               :color $ hsl 0 0 70
               :padding "|0px 4px"
           :examples $ []
+          :schema $ quote String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.core
           :require
