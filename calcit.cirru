@@ -6,7 +6,7 @@
     {} (:description |) (:init-fn 'edn-tree-viewer.main/main!) (:mode :js) (:reload-fn 'edn-tree-viewer.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/ |alerts.calcit/ |js-ffi/
-      :type-slots $ {} $ :dispatch-op 'edn-tree-viewer.schema/DispatchOp
+      :type-slots $ {} $ :dispatch-op 'edn-tree-viewer.schema/Op
   :files $ {}
     'edn-tree-viewer.comp.container $ %{} 'FileEntry
       :defs $ {} $ 'comp-container
@@ -40,12 +40,12 @@
                   {} $ :border $ str "|1px solid " (ui/hsl 0 0 90)
                 edit-plugin .render
                 if dev?
-                  Option :some $ reel.comp.reel/comp-typed-reel (>> states :reel) reel ({}) on-control
-                  Option :none
+                  Some $ reel.comp.reel/comp-typed-reel (>> states :reel) reel ({}) on-control
+                  , None
           :examples $ []
-          :schema $ quote $ Fn (reel.typed/State edn-tree-viewer.schema/Op edn-tree-viewer.schema/Store)
+          :schema $ quote $ Fn (reel.typed/State schema/Op schema/Store)
             Fn reel.typed/Control $ -> Unit
-            Fn edn-tree-viewer.schema/Op $ -> Unit
+            Fn schema/Op $ -> Unit
             -> respo.schema/Component
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.comp.container
@@ -114,16 +114,12 @@
                                     d! $ Op :path $ -> (take path idx) (conj result)
                               (list? d)
                                 comp-vector-keys d
-                                  match
-                                    peek-in path $ [] idx
-                                    (:some key)
-                                      if (number? key) (Option :some key) (Option :none)
-                                    (:none) (Option :none)
+                                  selected-index $ peek-in path $ [] idx
                                   fn (result d!)
                                     d! $ Op :path $ -> (take path idx) (conj result)
                               ; (seq? d)
                                 comp-seq-keys d
-                                  peek-in path $ [] idx
+                                  selected-index $ peek-in path $ [] idx
                                   fn (result d!)
                                     d! $ Op :path $ -> (take path idx) (conj result)
                               true $ div ({}) (comp-title |Literal)
@@ -202,7 +198,7 @@
                     let[] (k v) pair $ keyed-element idx $ div
                       {}
                         :style $ if
-                          = (Option :some k) selected
+                          = (Some k) selected
                           {} $ :background-color $ hsl 0 0 95
                           {}
                         :class-name $ str-spaced style-clickable-item style-pair
@@ -215,11 +211,12 @@
                       respo.comp.space/space-x 8
                       comp-preview v
           :examples $ []
-          :schema $ quote $ Fn (Map Dynamic Dynamic) (Option Dynamic)
-            Fn Dynamic
-              Fn edn-tree-viewer.schema/Op $ -> Unit
+          :schema $ quote $ Fn (Map K V) (Option K)
+            Fn K
+              Fn Op $ -> Unit
               -> Unit
             -> respo.schema/Component
+            :generics K V
         'comp-preview $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-preview (x)
             span
@@ -255,7 +252,7 @@
                           -> Unit
                         on-pick idx d!
                       :style $ if
-                        = (Option :some idx) selected
+                        = (Some idx) selected
                         .merge
                           {} (:cursor :pointer) (:padding "|2px 8px")
                           {} $ :background-color $ hsl 0 0 95
@@ -264,11 +261,12 @@
                     respo.comp.space/space-x 4
                     comp-preview item
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) (Option Dynamic)
+          :schema $ quote $ Fn (List V) (Option Number)
             Fn Number
-              Fn edn-tree-viewer.schema/Op $ -> Unit
+              Fn Op $ -> Unit
               -> Unit
             -> respo.schema/Component
+            :generics V
         'comp-string-preview $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-string-preview (t)
             div
@@ -294,7 +292,7 @@
                   keyed-element idx $ div
                     {}
                       :style $ if
-                        = (Option :some idx) selected
+                        = (Some idx) selected
                         .merge
                           {} (:cursor :pointer) (:padding "|2px 8px")
                           {} $ :background-color $ hsl 0 0 95
@@ -309,14 +307,15 @@
                     respo.comp.space/space-x 4
                     comp-preview item
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) (Option Number)
+          :schema $ quote $ Fn (List V) (Option Number)
             Fn Number
-              Fn edn-tree-viewer.schema/Op $ -> Unit
+              Fn Op $ -> Unit
               -> Unit
             -> respo.schema/Component
+            :generics V
         'get-by-keys $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-by-keys (data path)
-            if (empty? path) (Option :some data)
+            if (empty? path) (Some data)
               let
                   key $ .unwrap $ first path
                   next $ cond
@@ -324,11 +323,11 @@
                       get data key
                     (and (list? data) (number? key))
                       nth data key
-                    true $ Option :none
+                    true None
                 match next
                   (:some value)
                     recur value $ rest path
-                  (:none) (Option :none)
+                  (:none) None
           :examples $ []
           :schema $ quote $ Fn Dynamic (List Dynamic)
             -> $ Option Dynamic
@@ -336,13 +335,12 @@
             :code $ quote $ let
                 data $ {} $ :items ([] |one |two)
                 path $ [] :items 1
-              assert= (Option :some |two) (get-by-keys data path)
-              assert= (Option :some |two) (peek-in data path)
-              assert= (Option :some |e)
+              assert= (Some |two) (get-by-keys data path)
+              assert= (Some |two) (peek-in data path)
+              assert= (Some |e)
                 peek-in |Hello $ [] 1
-              assert= (Option :none)
-                peek-in data $ [] :missing
-              assert= (Option :some nil)
+              assert= None $ peek-in data $ [] :missing
+              assert= (Some nil)
                 get-by-keys
                   {} $ :value nil
                   [] :value
@@ -353,7 +351,7 @@
           :schema $ quote $ Fn Dynamic (-> Bool)
         'peek-in $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn peek-in (data path)
-            if (empty? path) (Option :some data)
+            if (empty? path) (Some data)
               let
                   key $ .unwrap $ first path
                   next $ cond
@@ -363,26 +361,38 @@
                       nth data key
                     (and (string? data) (number? key))
                       nth data key
-                    true $ Option :none
+                    true None
                 match next
                   (:some value)
                     recur value $ rest path
-                  (:none) (Option :none)
+                  (:none) None
           :examples $ []
           :schema $ quote $ Fn Dynamic (List Dynamic)
             -> $ Option Dynamic
+        'selected-index $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn selected-index (selected)
+            match selected
+              (:none) None
+              (:some key)
+                if (number? key) (Some key) None
+          :examples $ []
+          :schema $ quote $ Fn (Option T)
+            -> $ Option Number
+            :generics T
         'style-clickable-item $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-clickable-item
             {} $ |&:hover $ {}
               :background-color $ hsl 0 0 95
               :cursor :pointer
           :examples $ []
+          :schema $ quote String
         'style-content $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-content
             {} $ |& $ {} (:overflow :auto) (:font-size 13)
               :border-top $ str "|1px solid " $ hsl 0 0 90
               :padding-right |50vw
           :examples $ []
+          :schema $ quote String
         'style-end-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-end-value
             {} $ |& $ {}
@@ -396,6 +406,7 @@
               :padding-bottom 200
               :padding-right 80
           :examples $ []
+          :schema $ quote String
         'style-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-entry
             {} $ |& $ {} (:padding "|4px 0px")
@@ -403,32 +414,38 @@
               :overflow :auto
               :flex-shrink |0
           :examples $ []
+          :schema $ quote String
         'style-folded $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-folded
             {} $ |& $ {} (:padding "|0 8px") (:border-radius |8px)
               :border $ str "|1px solid " $ hsl 220 90 88
               :background-color $ hsl 220 80 98
           :examples $ []
+          :schema $ quote String
         'style-pair $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-pair
             {} $ |& $ {} (:cursor :pointer) (:padding "|2px 8px") (:font-size 11)
           :examples $ []
+          :schema $ quote String
         'style-path-seg $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-path-seg
             {} $ |& $ {} (:display :inline-block) (:padding "|0 4px")
           :examples $ []
+          :schema $ quote String
         'style-preview $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-preview
             {} $ |& $ {}
               :color $ hsl 0 0 70
               :font-size 12
           :examples $ []
+          :schema $ quote String
         'style-title $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-title
             {} $ |& $ {}
               :color $ hsl 0 0 70
               :padding "|0px 4px"
           :examples $ []
+          :schema $ quote String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.core
           :require
@@ -442,9 +459,9 @@
       :defs $ {}
         '*reel $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *reel
-            reel.typed/State :base schema/store :store schema/store :records ([]) :pointer (Option :none) :stopped? false :display? false :merged? false
+            reel.typed/State :base schema/store :store schema/store :records ([]) :pointer None :stopped? false :display? false :merged? false
           :examples $ []
-          :schema $ quote $ Ref (reel.typed/State edn-tree-viewer.schema/Op edn-tree-viewer.schema/Store)
+          :schema $ quote $ Ref (reel.typed/State schema/Op schema/Store)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ println |Dispatch: op
@@ -454,7 +471,7 @@
                 reel.typed/record-op updater @*reel action (generate-id!) (host/now-ms)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn edn-tree-viewer.schema/ResolvedOp (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/ResolvedOp (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -545,12 +562,6 @@
             |bottom-tip :default hud!
     'edn-tree-viewer.schema $ %{} 'FileEntry
       :defs $ {}
-        'DispatchOp $ %{} 'CodeEntry
-          :doc "|Respo event boundary remains open for the anonymous :states event emitted by Alerts Prompt. resolve-op validates and converts that event into the app Op."
-          :code $ quote $ def DispatchOp
-            :: :states ([]) nil
-          :examples $ []
-          :schema $ quote AnyEnum
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
             :states (List respo.schema/CoordKey) Dynamic
@@ -587,7 +598,7 @@
                   (:some value) (Store :states states :data value :path path)
                   (:none) (Store :states states :data nil :path path)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> edn-tree-viewer.schema/Store)
+          :schema $ quote $ Fn Dynamic (-> Store)
         'resolve-op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resolve-op (raw)
             match raw
@@ -597,14 +608,14 @@
                   , state
               _ $ decode-map-as raw Op
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> edn-tree-viewer.schema/Op) (:open :decode)
+          :schema $ quote $ Fn AnyEnum (-> Op) (:open :decode)
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             Store :states
               {} $ :cursor $ []
               , :data nil :path $ []
           :examples $ []
-          :schema $ quote edn-tree-viewer.schema/Store
+          :schema $ quote Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.schema
     'edn-tree-viewer.updater $ %{} 'FileEntry
@@ -622,7 +633,7 @@
                   assoc :path $ []
               (:path path) (assoc store :path path)
           :examples $ []
-          :schema $ quote $ Fn edn-tree-viewer.schema/Store edn-tree-viewer.schema/Op String Number (-> edn-tree-viewer.schema/Store)
+          :schema $ quote $ Fn schema/Store schema/Op String Number (-> schema/Store)
           :tests $ [] $ %{} 'TestEntry (:name |data-path-storage)
             :code $ quote $ let
                 data $ {} $ :items ([] |one |two)
