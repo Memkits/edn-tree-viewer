@@ -204,7 +204,7 @@
                         :class-name $ str-spaced style-clickable-item style-pair
                         :on-click $ fn (e d!)
                           hint-fn $ Fn respo.schema/RespoEvent
-                            Fn edn-tree-viewer.schema/Op $ -> Unit
+                            Fn Op $ -> Unit
                             -> Unit
                           on-pick k d!
                       comp-literal k
@@ -248,7 +248,7 @@
                     {}
                       :on-click $ fn (e d!)
                         hint-fn $ Fn respo.schema/RespoEvent
-                          Fn edn-tree-viewer.schema/Op $ -> Unit
+                          Fn Op $ -> Unit
                           -> Unit
                         on-pick idx d!
                       :style $ if
@@ -300,7 +300,7 @@
                       :class-name style-clickable-item
                       :on-click $ fn (e d!)
                         hint-fn $ Fn respo.schema/RespoEvent
-                          Fn edn-tree-viewer.schema/Op $ -> Unit
+                          Fn Op $ -> Unit
                           -> Unit
                         on-pick idx d!
                     comp-literal idx
@@ -329,8 +329,9 @@
                     recur value $ rest path
                   (:none) None
           :examples $ []
-          :schema $ quote $ Fn Dynamic (List Dynamic)
+          :schema $ quote $ Fn Dynamic (List Key)
             -> $ Option Dynamic
+            :generics Key
           :tests $ [] $ %{} 'TestEntry (:name |nested-edn)
             :code $ quote $ let
                 data $ {} $ :items ([] |one |two)
@@ -367,8 +368,9 @@
                     recur value $ rest path
                   (:none) None
           :examples $ []
-          :schema $ quote $ Fn Dynamic (List Dynamic)
+          :schema $ quote $ Fn Dynamic (List Key)
             -> $ Option Dynamic
+            :generics Key
         'selected-index $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn selected-index (selected)
             match selected
@@ -535,7 +537,7 @@
           :code $ quote $ defn render-app! ()
             render-with! (mount-target)
               fn () $ comp-container @*reel on-control! $ fn (op)
-                hint-fn $ Fn edn-tree-viewer.schema/Op $ -> Unit
+                hint-fn $ Fn schema/Op $ -> Unit
                 dispatch! op
               fn (raw)
                 hint-fn $ Fn *dispatch-op $ -> Unit
@@ -598,7 +600,7 @@
                   (:some value) (Store :states states :data value :path path)
                   (:none) (Store :states states :data nil :path path)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Store)
+          :schema $ quote $ Fn Input (-> Store) (:generics Input)
         'resolve-op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resolve-op (raw)
             match raw
