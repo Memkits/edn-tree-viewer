@@ -473,7 +473,7 @@
                 reel.typed/record-op updater @*reel action (generate-id!) (host/now-ms)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn schema/ResolvedOp (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/ResolvedOp (-> Unit) (:features :io :js-ffi :state)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -499,7 +499,7 @@
             println "|App started."
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mount-target ()
             .unwrap $ respo.ffi.browser/query-selector |.app
@@ -508,7 +508,7 @@
         'on-control! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-control! (control) (dispatch! control)
           :examples $ []
-          :schema $ quote $ Fn reel.typed/Control (-> Unit)
+          :schema $ quote $ Fn reel.typed/Control (-> Unit) (:features :io :state)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             let
@@ -520,7 +520,7 @@
                   :data $ :data store
                   :path $ :path store
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -532,7 +532,7 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-with! (mount-target)
@@ -543,11 +543,11 @@
                 hint-fn $ Fn *dispatch-op $ -> Unit
                 dispatch! $ schema/resolve-op raw
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'snippets $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn snippets () (println config/cdn?)
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.main
           :require
@@ -566,7 +566,7 @@
       :defs $ {}
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
-            :states (List respo.schema/CoordKey) Dynamic
+            :states (List respo.schema/CoordKey) (Map Dynamic Dynamic)
             :hydrate-storage edn-tree-viewer.schema/Store
             :update-data Dynamic
             :path $ List Dynamic
@@ -607,7 +607,7 @@
               (:states cursor state)
                 Op :states
                   decode-map-as cursor $ List respo.schema/CoordKey
-                  , state
+                  decode-map-as state $ Map Dynamic Dynamic
               _ $ decode-map-as raw Op
           :examples $ []
           :schema $ quote $ Fn AnyEnum (-> Op) (:open :decode)
