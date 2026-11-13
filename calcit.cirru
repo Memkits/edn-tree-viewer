@@ -111,12 +111,12 @@
                                 comp-map-keys d
                                   peek-in path $ [] idx
                                   fn (result d!)
-                                    d! $ Op :path $ -> (take path idx) (conj result)
+                                    d! $ Op :path $ -> (take path idx) (&list:append result)
                               (list? d)
                                 comp-vector-keys d
                                   selected-index $ peek-in path $ [] idx
                                   fn (result d!)
-                                    d! $ Op :path $ -> (take path idx) (conj result)
+                                    d! $ Op :path $ -> (take path idx) (&list:append result)
                               ; (seq? d)
                                 comp-seq-keys d
                                   selected-index $ peek-in path $ [] idx
@@ -143,7 +143,7 @@
                     keyed-element -1 $ div $ {}
                       :style $ {} $ :width 200
           :examples $ []
-          :schema $ quote $ Fn T (List Dynamic) (Map Tag respo.schema/CssValue) (-> respo.schema/Component) (:generics T)
+          :schema $ quote $ Fn T (List Key) (Map Tag respo.schema/CssValue) (-> respo.schema/Component) (:generics T Key)
         'comp-literal $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-literal (x)
             if
