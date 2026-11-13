@@ -610,7 +610,7 @@
                   decode-map-as state $ Map Dynamic Dynamic
               _ $ decode-map-as raw Op
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Op) (:open :decode)
+          :schema $ quote $ Fn Input (-> Op) (:generics Input)
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             Store :states
