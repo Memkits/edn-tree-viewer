@@ -108,13 +108,12 @@
                           (:some d)
                             cond
                                 map? d
-                                comp-map-keys d
-                                  peek-in path $ [] idx
+                                comp-map-keys d (nth path idx)
                                   fn (result d!)
                                     d! $ Op :path $ -> (take path idx) (&list:append result)
                               (list? d)
                                 comp-vector-keys d
-                                  selected-index $ peek-in path $ [] idx
+                                  selected-index $ nth path idx
                                   fn (result d!)
                                     d! $ Op :path $ -> (take path idx) (&list:append result)
                               ; (seq? d)
@@ -578,7 +577,7 @@
           :schema $ quote UnionDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
-            :states $ Map Dynamic Dynamic
+            :states $ Map respo.schema/CoordKey Dynamic
             :data Dynamic
             :path $ List Dynamic
           :examples $ []
@@ -592,7 +591,7 @@
                   legacy $ decode-map-as data $ Map Tag Dynamic
                   states $ decode-map-as
                     .unwrap $ get legacy :states
-                    Map Dynamic Dynamic
+                    Map respo.schema/CoordKey Dynamic
                   path $ decode-map-as
                     .unwrap $ get legacy :path
                     List Dynamic
@@ -601,6 +600,19 @@
                   (:none) (Store :states states :data nil :path path)
           :examples $ []
           :schema $ quote $ Fn Input (-> Store) (:generics Input)
+          :tests $ [] $ %{} 'TestEntry (:name |distinguishes-ui-keys-from-edn-keys)
+            :code $ quote $ let
+                states $ {}
+                  :panel $ {}
+                  |panel $ {}
+                  2 $ {}
+                data $ {} $ false |kept
+                path $ [] false
+                recovered $ read-store $ parse-cirru-edn
+                  format-cirru-edn $ {} (:states states) (:data data) (:path path)
+              assert= states $ :states recovered
+              assert= data $ :data recovered
+              assert= path $ :path recovered
         'resolve-op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resolve-op (raw)
             match raw
@@ -628,7 +640,7 @@
               (:states cursor data)
                 assoc store :states $ decode-map-as
                   respo.cursor/update-state-tree (:states store) cursor data
-                  Map Dynamic Dynamic
+                  Map respo.schema/CoordKey Dynamic
               (:hydrate-storage data) data
               (:update-data data)
                 -> store (assoc :data data)
