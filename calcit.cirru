@@ -47,6 +47,7 @@
             Fn reel.typed/Control $ -> Unit
             Fn schema/Op $ -> Unit
             -> respo.schema/Component
+            :features :state
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.comp.container
           :require (respo-ui.core :as ui) (respo-ui.css :as css)
