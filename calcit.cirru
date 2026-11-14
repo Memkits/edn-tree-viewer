@@ -108,13 +108,12 @@
                           (:some d)
                             cond
                                 map? d
-                                comp-map-keys d
-                                  peek-in path $ [] idx
+                                comp-map-keys d (nth path idx)
                                   fn (result d!)
                                     d! $ Op :path $ -> (take path idx) (&list:append result)
                               (list? d)
                                 comp-vector-keys d
-                                  selected-index $ peek-in path $ [] idx
+                                  selected-index $ nth path idx
                                   fn (result d!)
                                     d! $ Op :path $ -> (take path idx) (&list:append result)
                               ; (seq? d)
