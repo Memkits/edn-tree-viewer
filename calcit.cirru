@@ -577,7 +577,7 @@
           :schema $ quote UnionDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
-            :states $ Map Dynamic Dynamic
+            :states $ Map respo.schema/CoordKey Dynamic
             :data Dynamic
             :path $ List Dynamic
           :examples $ []
@@ -591,7 +591,7 @@
                   legacy $ decode-map-as data $ Map Tag Dynamic
                   states $ decode-map-as
                     .unwrap $ get legacy :states
-                    Map Dynamic Dynamic
+                    Map respo.schema/CoordKey Dynamic
                   path $ decode-map-as
                     .unwrap $ get legacy :path
                     List Dynamic
@@ -627,7 +627,7 @@
               (:states cursor data)
                 assoc store :states $ decode-map-as
                   respo.cursor/update-state-tree (:states store) cursor data
-                  Map Dynamic Dynamic
+                  Map respo.schema/CoordKey Dynamic
               (:hydrate-storage data) data
               (:update-data data)
                 -> store (assoc :data data)
