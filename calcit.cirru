@@ -44,10 +44,10 @@
                   , None
           :examples $ []
           :schema $ quote $ Fn (reel.typed/State schema/Op schema/Store)
-            Fn reel.typed/Control $ -> Unit
+            Fn reel.typed/Control (-> Unit) (:features :io :state)
             Fn schema/Op $ -> Unit
             -> respo.schema/Component
-            :features :state
+            :features :io :js-ffi :state
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.comp.container
           :require (respo-ui.core :as ui) (respo-ui.css :as css)
@@ -143,7 +143,7 @@
                     keyed-element -1 $ div $ {}
                       :style $ {} $ :width 200
           :examples $ []
-          :schema $ quote $ Fn T (List Key) (Map Tag respo.schema/CssValue) (-> respo.schema/Component) (:generics T Key)
+          :schema $ quote $ Fn T (List Dynamic) (Map Tag respo.schema/CssValue) (-> respo.schema/Component) (:generics T) (:features :js-ffi)
         'comp-literal $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-literal (x)
             if
