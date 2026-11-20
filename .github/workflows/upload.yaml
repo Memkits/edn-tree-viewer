@@ -65,7 +65,7 @@ jobs:
       - name: Build frontend
         run: yarn build
       - name: Upload and verify frontend assets on COS
-        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+        if: github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login != 'dependabot[bot]' && github.actor != 'dependabot[bot]')
         uses: worktools/cos-upload-action@v1.2.0
         with:
           source-dir: dist
