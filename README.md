@@ -4,14 +4,14 @@
 
 ## 使用者影响
 
-升级到正式 **Calcit / @calcit/procs 0.42.1** 后，请重新安装依赖、编译并刷新页面。`Set Data`、`edn-tree-viewer` Map 存档、`:tab-echo` 消息和页面 HUD 继续使用原有合同。恢复存档成功后才注册离页保存。 Respo 派发槽绑定具名 Op，旧弹窗状态继续由入口解码。 路径查找函数 `get-by-keys` 和 `peek-in` 现在返回 `Option`，调用方可区分缺失路径与实际的 `nil` 值。
+升级到正式 **Calcit / @calcit/procs 0.44.0** 后，请重新安装依赖、编译并刷新页面。`Set Data`、`edn-tree-viewer` Map 存档、`:tab-echo` 消息和页面 HUD 继续使用原有合同。恢复存档成功后才注册离页保存。 Respo 派发槽绑定具名 Op，旧弹窗状态继续由入口解码。 路径查找函数 `get-by-keys` 和 `peek-in` 现在返回 `Option`，调用方可区分缺失路径与实际的 `nil` 值。
 
 标量颜色和显示由 `Scalar` union 决定，树和导航路径仍接受异构 EDN，包括 Bool 和 List 类型的 Map 键。Map 列表使用行号区分渲染节点，点击仍用原 EDN 键查找。直接调用 `comp-edn-tree-viewer` 时，样式值采用 Respo 的 `CssValue`，可省略没有值的属性。
 
 ## 本次迁移
 
 - Reel 使用 `State<Op, Store>`。Alerts 的 `:states` 事件在入口校验坐标并转为业务操作，Reel 控制独立解码。
-- 依赖全部使用正式版本。Respo **0.19.9**、UI **0.15.3**、Reel **0.11.1**、Alerts **0.14.4**、JS-FFI **0.2.16**，传递依赖 Router **0.12.7**。
+- 依赖全部使用正式版本。Respo **0.19.11**、UI **0.15.5**、Reel **0.11.3**、Alerts **0.14.6**、JS-FFI **0.2.18**，传递依赖 Router **0.12.9**。
 
 ## 开发与验证
 
