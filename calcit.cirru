@@ -639,9 +639,7 @@
           :code $ quote $ defn updater (store op op-id op-time)
             match op
               (:states cursor data)
-                assoc store :states $ decode-map-as
-                  respo.cursor/update-state-tree (:states store) cursor data
-                  Map respo.schema/CoordKey Dynamic
+                assoc store :states $ respo.cursor/update-state-map (:states store) cursor data
               (:hydrate-storage data) data
               (:update-data data)
                 -> store (assoc :data data)
@@ -649,22 +647,41 @@
               (:path path) (assoc store :path path)
           :examples $ []
           :schema $ quote $ Fn schema/Store schema/Op String Number (-> schema/Store)
-          :tests $ [] $ %{} 'TestEntry (:name |data-path-storage)
-            :code $ quote $ let
-                data $ {} $ :items ([] |one |two)
-                path $ [] :items 1
-                loaded $ updater schema/store (schema/Op :update-data data) |fixture 0
-                selected $ updater loaded (schema/Op :path path) |fixture 0
-                legacy $ {}
-                  :states $ :states selected
-                  :data $ :data selected
-                  :path $ :path selected
-                recovered $ schema/read-store $ parse-cirru-edn (format-cirru-edn legacy)
-                replaced $ updater recovered (schema/Op :update-data |replacement) |fixture 0
-              assert= path $ :path recovered
-              assert= data $ :data recovered
-              assert= ([]) (:path replaced)
-              assert= |replacement $ :data replaced
+          :tests $ []
+            %{} 'TestEntry (:name |data-path-storage)
+              :code $ quote $ let
+                  data $ {} $ :items ([] |one |two)
+                  path $ [] :items 1
+                  loaded $ updater schema/store (schema/Op :update-data data) |fixture 0
+                  selected $ updater loaded (schema/Op :path path) |fixture 0
+                  legacy $ {}
+                    :states $ :states selected
+                    :data $ :data selected
+                    :path $ :path selected
+                  recovered $ schema/read-store $ parse-cirru-edn (format-cirru-edn legacy)
+                  replaced $ updater recovered (schema/Op :update-data |replacement) |fixture 0
+                assert= path $ :path recovered
+                assert= data $ :data recovered
+                assert= ([]) (:path replaced)
+                assert= |replacement $ :data replaced
+            %{} 'TestEntry (:name |state-preserves-edn-keys)
+              :code $ quote $ let
+                  initial schema/store
+                  payload $ {} (true |yes) (false |no)
+                  updated $ updater initial
+                    schema/Op :states ([] :viewer |child 2) payload
+                    , |id 0
+                  saved $ {}
+                    :states $ :states updated
+                    :data $ :data updated
+                    :path $ :path updated
+                  recovered $ schema/read-store $ parse-cirru-edn (format-cirru-edn saved)
+                assert= (Result :ok |yes)
+                  get-in (:states recovered) ([] :viewer |child 2 :data true)
+                assert= (Result :ok |no)
+                  get-in (:states recovered) ([] :viewer |child 2 :data false)
+                assert= (:data initial) (:data recovered)
+              :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns edn-tree-viewer.updater
           :require $ edn-tree-viewer.schema :as schema
